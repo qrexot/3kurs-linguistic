@@ -1,0 +1,557 @@
+/* ==========================================================================
+   ADMIN FORMATTING TOOLS & STYLES (CLAUDE DARK THEME)
+   ========================================================================== */
+
+.format-toolbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 8px 12px;
+  background: #202020;
+  border: 1px solid #333333;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.format-toolbar button {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: #282828;
+  color: #ededed;
+  border: 1px solid #383838;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.format-toolbar button:hover {
+  background: #323232;
+  border-color: #484848;
+  color: #ffffff;
+}
+
+.format-toolbar .format-more {
+  margin-left: auto;
+  background: rgba(217, 119, 87, 0.15);
+  color: #f7b4a1;
+  border: 1px solid rgba(217, 119, 87, 0.35);
+  font-weight: 600;
+}
+
+.format-toolbar .format-more:hover {
+  background: rgba(217, 119, 87, 0.25);
+  border-color: #d97757;
+  color: #ffffff;
+}
+
+.format-more span {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: rgba(217, 119, 87, 0.25);
+  font-size: 11px;
+  color: #ffffff;
+}
+
+.format-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d97757;
+}
+
+/* Format Dialog */
+.format-dialog {
+  box-sizing: border-box;
+  width: min(840px, calc(100% - 32px));
+  max-width: 840px;
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  color: #ededed;
+  background: #1e1e1e;
+  border: 1px solid #383838;
+  border-radius: 14px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.format-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  animation: format-enter 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.format-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.format-dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 24px 16px;
+  flex: none;
+  border-bottom: 1px solid #292929;
+}
+
+.format-dialog-head h2 {
+  font-size: 22px;
+  font-weight: 650;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 6px 0 4px;
+}
+
+.format-dialog-head p {
+  font-size: 13px;
+  color: #a3a3a3;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.format-dialog .icon-btn {
+  font-size: 20px;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #262626;
+  border: 1px solid #363636;
+  color: #a3a3a3;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+}
+
+.format-dialog .icon-btn:hover {
+  background: #333333;
+  color: #ffffff;
+  border-color: #484848;
+}
+
+/* Search input */
+.format-search {
+  display: block;
+  margin: 0 0 18px;
+}
+
+.format-search > span {
+  display: block;
+  color: #a3a3a3;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.format-search input {
+  width: 100%;
+  min-height: 44px;
+  background: #171717;
+  border: 1px solid #363636;
+  border-radius: 8px;
+  color: #ffffff;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.16s ease;
+}
+
+.format-search input:focus {
+  border-color: #d97757;
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.2);
+  background: #1c1c1c;
+}
+
+.format-dialog .format-search {
+  margin: 16px 24px 12px;
+  flex: none;
+}
+
+/* Category pills */
+.format-categories {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.format-categories button {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid #363636;
+  background: #242424;
+  color: #a3a3a3;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.format-categories button:hover {
+  background: #2c2c2c;
+  color: #ffffff;
+  border-color: #484848;
+}
+
+.format-categories button[aria-pressed="true"] {
+  background: #d97757;
+  color: #ffffff;
+  border-color: #d97757;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(217, 119, 87, 0.35);
+}
+
+.format-dialog .format-categories {
+  padding: 0 24px;
+  margin-bottom: 16px;
+  flex: none;
+}
+
+/* Grid of options */
+.format-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 24px 24px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  align-content: start;
+}
+
+.format-option {
+  text-align: left;
+  border: 1px solid #333333;
+  border-radius: 10px;
+  padding: 14px;
+  background: #232323;
+  color: #ededed;
+  cursor: pointer;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  transition: all 0.16s ease;
+}
+
+.format-option:hover {
+  background: #2a2a2a;
+  border-color: rgba(217, 119, 87, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.format-option:focus-visible,
+.format-categories button:focus-visible {
+  outline: 2px solid #d97757;
+  outline-offset: 2px;
+}
+
+.format-option strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.35;
+}
+
+.format-option span {
+  font-size: 11.5px;
+  color: #999999;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.format-option .format-option-group {
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d97757;
+}
+
+.format-dialog-foot {
+  padding: 14px 24px;
+  font-size: 12px;
+  color: #888888;
+  border-top: 1px solid #292929;
+  background: #1a1a1a;
+  flex: none;
+}
+
+.format-dialog-foot a {
+  color: #e28a6c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.format-dialog-foot a:hover,
+.format-foot-btn:hover {
+  color: #ffffff;
+}
+
+.format-foot-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: #e28a6c;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.format-empty {
+  grid-column: 1 / -1;
+  color: #888888;
+  padding: 30px 0;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Prompt Card in help.html */
+.format-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  background: #212121;
+  border: 1px solid #333333;
+  border-radius: 12px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.format-prompt-head {
+  flex: 1 1 100%;
+}
+
+.format-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.format-prompt h2 {
+  margin-top: 0;
+  margin-bottom: 6px;
+  font-size: 20px;
+  font-weight: 650;
+  color: #ffffff;
+}
+
+.format-prompt p,
+.format-example-head p {
+  font-size: 13.5px;
+  color: #a3a3a3;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.format-prompt details {
+  flex-basis: 100%;
+  font-size: 13px;
+  margin-top: 10px;
+  border-top: 1px solid #2c2c2c;
+  padding-top: 12px;
+}
+
+.format-prompt summary {
+  cursor: pointer;
+  min-height: 32px;
+  font-weight: 500;
+  color: #e28a6c;
+  user-select: none;
+}
+
+.format-prompt summary:hover {
+  color: #ffffff;
+}
+
+.format-prompt details p {
+  margin-top: 10px;
+  padding: 14px;
+  background: #191919;
+  border: 1px solid #2e2e2e;
+  border-radius: 8px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #dfdfdf;
+  white-space: pre-wrap;
+}
+
+/* Example Showcase in help.html */
+.format-example {
+  margin-top: 20px;
+  padding: 22px;
+  background: #212121;
+  border: 1px solid #333333;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.format-example-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.format-example-head h2 {
+  font-size: 20px;
+  font-weight: 650;
+  color: #ffffff;
+  margin: 4px 0 6px;
+}
+
+.format-example-head .btn {
+  flex: none;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.format-example-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.format-example-grid > * {
+  min-width: 0;
+  margin: 0;
+}
+
+.format-example-grid .help-code {
+  padding: 16px 18px;
+  border-radius: 8px;
+  background: #181818;
+  border: 1px solid #303030;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #e6edf3;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.format-example-grid .prose {
+  font-size: 15px;
+  margin-top: 0;
+  padding: 0;
+}
+
+.format-example-grid .prose > :first-child {
+  margin-top: 0;
+}
+
+@keyframes format-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .format-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .format-dialog {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 20px);
+    border-radius: 12px;
+  }
+  .format-dialog-head {
+    padding: 18px 16px 14px;
+  }
+  .format-dialog-head h2 {
+    font-size: 19px;
+  }
+  .format-dialog .format-search {
+    margin: 14px 16px 10px;
+  }
+  .format-dialog .format-categories {
+    padding: 0 16px;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .format-categories button {
+    min-height: 32px;
+    padding: 5px 11px;
+    font-size: 11.5px;
+  }
+  .format-options {
+    grid-template-columns: 1fr;
+    padding: 0 16px 16px;
+    gap: 8px;
+  }
+  .format-option {
+    padding: 12px;
+  }
+  .format-dialog-foot {
+    padding: 12px 16px;
+  }
+  .format-example-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .format-example-head h2 {
+    font-size: 18px;
+  }
+  .format-example-head {
+    gap: 10px;
+  }
+  .format-toolbar button {
+    min-height: 38px;
+    padding: 8px 10px;
+  }
+  .format-toolbar .format-more {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+  .format-prompt-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .format-prompt-actions .btn,
+  .format-prompt .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .format-dialog[open] {
+    animation: none;
+  }
+  .format-toolbar button,
+  .format-option {
+    transition: none;
+  }
+}

@@ -1,0 +1,1010 @@
+/* ==========================================================================
+   READING TYPOGRAPHY — CLAUDE DARK EDITORIAL PROSE
+   High contrast, warm typography, crisp cards & callouts, zero eye-strain.
+   ========================================================================== */
+
+.prose {
+  --prose-ink: #ffffff;
+  --prose-soft: #ededed;
+  --prose-body: #dfdfdf;
+  --prose-muted: #a3a3a3;
+  --prose-faint: #737373;
+  --prose-line: #333333;
+  --prose-line-soft: #2a2a2a;
+  --prose-surface: #202020;
+  --prose-surface-raised: #252525;
+  --prose-paper: #191919;
+  --prose-accent: #d97757;
+  --prose-accent-deep: #e28a6c;
+  --prose-accent-soft: rgba(217, 119, 87, 0.14);
+  --prose-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --prose-serif: "Literata", Georgia, "Times New Roman", serif;
+  --prose-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, Consolas, monospace;
+
+  min-width: 0;
+  max-width: 72ch;
+  margin-top: 28px;
+  font-family: var(--prose-serif);
+  font-size: 18.5px;
+  line-height: 1.8;
+  letter-spacing: -0.003em;
+  color: var(--prose-body);
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+  counter-reset: prose-section;
+}
+
+.prose > * {
+  max-width: 100%;
+}
+
+.prose p {
+  margin: 0 0 1.3em;
+  line-height: 1.8;
+  color: var(--prose-body);
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose > p:first-child {
+  font-size: 1.05em;
+  line-height: 1.76;
+  color: #f7f7f7;
+}
+
+/* Headings */
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  font-family: var(--prose-serif);
+  color: var(--prose-ink);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  scroll-margin-top: 110px;
+}
+
+.prose h2 {
+  counter-increment: prose-section;
+  position: relative;
+  margin: 2.2em 0 0.8em;
+  padding-top: 1.1em;
+  border-top: 1px solid var(--prose-line);
+  font-size: 1.65em;
+  color: #ffffff;
+}
+
+.prose h2::before {
+  content: counter(prose-section, decimal-leading-zero);
+  position: absolute;
+  top: 0.55em;
+  left: 0;
+  font-family: var(--prose-sans);
+  font-size: 0.38em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--prose-accent);
+  line-height: 1;
+}
+
+.prose > h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.prose > h2:first-child::before {
+  top: -0.1em;
+}
+
+.prose h3 {
+  margin: 1.8em 0 0.6em;
+  font-size: 1.32em;
+  color: #ffffff;
+}
+
+.prose h4,
+.prose h5,
+.prose h6 {
+  font-size: 1.1em;
+  margin: 1.5em 0 0.4em;
+  font-family: var(--prose-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.prose h6 {
+  font-size: 0.9em;
+  color: var(--prose-muted);
+  text-transform: none;
+}
+
+/* Inline Emphasis */
+.prose strong {
+  font-weight: 650;
+  color: #ffffff;
+}
+
+.prose em,
+.prose i {
+  font-style: italic;
+  color: #f3f3f3;
+}
+
+.prose u {
+  text-decoration-color: var(--prose-accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.24em;
+}
+
+.prose del {
+  color: var(--prose-muted);
+  text-decoration-color: var(--prose-faint);
+}
+
+.prose mark {
+  padding: 0.1em 0.38em;
+  border-radius: 4px;
+  background: rgba(217, 119, 87, 0.26);
+  color: #ffd7cc;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.prose sup,
+.prose sub {
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+.prose kbd {
+  display: inline-block;
+  padding: 0.16em 0.48em;
+  border: 1px solid #404040;
+  border-bottom: 2px solid #505050;
+  border-radius: 5px;
+  background: #252525;
+  font-family: var(--prose-mono);
+  font-size: 0.78em;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.prose .md-tag {
+  display: inline-block;
+  padding: 0.12em 0.65em;
+  border: 1px solid rgba(217, 119, 87, 0.38);
+  border-radius: 999px;
+  background: var(--prose-accent-soft);
+  color: #e28a6c;
+  font-family: var(--prose-sans);
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  vertical-align: baseline;
+}
+
+/* Links */
+.prose a {
+  color: var(--prose-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(217, 119, 87, 0.45);
+  text-underline-offset: 0.24em;
+  transition: all 0.18s ease;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.prose a:hover {
+  color: var(--prose-accent-deep);
+  text-decoration-color: var(--prose-accent);
+  background: rgba(217, 119, 87, 0.1);
+  border-radius: 2px;
+}
+
+/* Lists */
+.prose ul,
+.prose ol {
+  margin: 0.8em 0 1.4em;
+  padding-left: 1.4em;
+  color: var(--prose-body);
+}
+
+.prose li {
+  margin: 0.4em 0;
+  padding-left: 0.2em;
+  line-height: 1.74;
+}
+
+.prose li::marker {
+  color: var(--prose-accent);
+  font-weight: 600;
+}
+
+.prose ul ul,
+.prose ol ul,
+.prose ul ol,
+.prose ol ol {
+  margin: 0.35em 0 0.45em;
+  padding-left: 1.3em;
+}
+
+.prose li > p {
+  margin: 0.2em 0;
+}
+
+/* Blockquotes */
+.prose blockquote {
+  position: relative;
+  margin: 1.8em 0;
+  padding: 1.2em 1.6em 1.2em 1.8em;
+  border: 1px solid var(--prose-line-soft);
+  border-left: 3.5px solid var(--prose-accent);
+  border-radius: 0 10px 10px 0;
+  background: #202020;
+  font-family: var(--prose-serif);
+  font-size: 1.05em;
+  line-height: 1.72;
+  color: #f0f0f0;
+  font-style: italic;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.prose blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Dividers */
+.prose hr {
+  border: 0;
+  height: 1px;
+  margin: 2.5em 0;
+  background: var(--prose-line);
+}
+
+/* Code & Pre */
+.prose code {
+  padding: 0.14em 0.42em;
+  border: 1px solid #363636;
+  border-radius: 5px;
+  background: #242424;
+  font-family: var(--prose-mono);
+  font-size: 0.84em;
+  color: #f2f2f2;
+}
+
+.prose pre {
+  overflow: auto;
+  max-width: 100%;
+  margin: 1.7em 0;
+  padding: 1.3em 1.5em;
+  border: 1px solid #333333;
+  border-radius: 10px;
+  background: #191919;
+  color: #f3f3f3;
+  font-family: var(--prose-mono);
+  font-size: 0.85em;
+  line-height: 1.7;
+  tab-size: 2;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.prose pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 1em;
+  white-space: pre;
+}
+
+.prose .md-code {
+  margin: 1.8em 0;
+  border: 1px solid #333333;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #191919;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.prose .md-code-label {
+  padding: 0.55em 1.2em;
+  border-bottom: 1px solid #2e2e2e;
+  font-family: var(--prose-mono);
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #999999;
+  background: #232323;
+}
+
+.prose .md-code pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Tables */
+.prose .table-scroll {
+  max-width: 100%;
+  margin: 1.8em 0;
+  overflow: auto;
+  border: 1px solid var(--prose-line);
+  border-radius: 10px;
+  background: #1f1f1f;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.prose .table-scroll table {
+  width: 100%;
+  min-width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-family: var(--prose-sans);
+  font-size: 0.84em;
+  line-height: 1.6;
+}
+
+.prose .table-scroll th,
+.prose .table-scroll td {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--prose-line-soft);
+  min-width: 110px;
+  vertical-align: top;
+  text-align: left;
+  overflow-wrap: anywhere;
+  color: var(--prose-soft);
+}
+
+.prose .table-scroll th {
+  background: #262626;
+  color: #ffffff;
+  font-size: 0.82em;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom: 1px solid #363636;
+}
+
+.prose .table-scroll tr:last-child td {
+  border-bottom: 0;
+}
+
+.prose .table-scroll tbody tr {
+  transition: background-color 0.14s ease;
+}
+
+.prose .table-scroll tbody tr:hover {
+  background: #262626;
+}
+
+/* ==========================================================================
+   CLAUDE DARK CALLOUT SYSTEM
+   Elevated card containers, bright crisp accents, iconic pill badges, high contrast.
+   ========================================================================== */
+
+.prose .callout {
+  --block-accent: #34d399;
+  --block-badge-bg: rgba(52, 211, 153, 0.12);
+  --block-badge-border: rgba(52, 211, 153, 0.25);
+  --block-icon: "✦";
+  
+  position: relative;
+  margin: 1.8em 0;
+  padding: 18px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid var(--block-accent);
+  border-radius: 8px;
+  background: #212121;
+  font-family: var(--prose-serif);
+  font-size: 0.98em;
+  line-height: 1.76;
+  color: #ededed;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.prose .callout:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.32);
+}
+
+/* Callout Label Badge */
+.prose .callout .callout-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--block-badge-bg);
+  border: 1px solid var(--block-badge-border);
+  font-family: var(--prose-sans);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
+  text-transform: uppercase;
+  color: var(--block-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.prose .callout .callout-label::before {
+  content: var(--block-icon);
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.95;
+}
+
+.prose .callout > :nth-child(2) {
+  margin-top: 0;
+}
+
+.prose .callout > :last-child {
+  margin-bottom: 0;
+}
+
+.prose .callout p,
+.prose .callout li {
+  font-family: var(--prose-serif);
+  color: #e5e5e5;
+  line-height: 1.74;
+}
+
+.prose .callout p:last-child {
+  margin-bottom: 0;
+}
+
+/* 1. Definition (Определение) — Emerald */
+.prose .callout.definition {
+  --block-accent: #34d399;
+  --block-badge-bg: rgba(52, 211, 153, 0.12);
+  --block-badge-border: rgba(52, 211, 153, 0.25);
+  --block-icon: "◈";
+}
+
+/* 2. Important (Важно) — Claude Terracotta */
+.prose .callout.important {
+  --block-accent: #d97757;
+  --block-badge-bg: rgba(217, 119, 87, 0.14);
+  --block-badge-border: rgba(217, 119, 87, 0.3);
+  --block-icon: "✦";
+}
+
+/* 3. Remember (Запомнить) — Warm Terracotta / Coral */
+.prose .callout.remember {
+  --block-accent: #e28a6c;
+  --block-badge-bg: rgba(226, 138, 108, 0.14);
+  --block-badge-border: rgba(226, 138, 108, 0.3);
+  --block-icon: "★";
+}
+
+/* 4. Example (Пример) — Amber Gold */
+.prose .callout.example {
+  --block-accent: #fbbf24;
+  --block-badge-bg: rgba(251, 191, 36, 0.12);
+  --block-badge-border: rgba(251, 191, 36, 0.25);
+  --block-icon: "✧";
+}
+
+/* 5. Question (К экзамену / Вопрос) — Violet */
+.prose .callout.question {
+  --block-accent: #a78bfa;
+  --block-badge-bg: rgba(167, 139, 250, 0.13);
+  --block-badge-border: rgba(167, 139, 250, 0.28);
+  --block-icon: "?";
+}
+
+/* 6. Answer (Ответ) — Cyan / Sky Blue */
+.prose .callout.answer {
+  --block-accent: #38bdf8;
+  --block-badge-bg: rgba(56, 189, 248, 0.12);
+  --block-badge-border: rgba(56, 189, 248, 0.25);
+  --block-icon: "✓";
+}
+
+/* 7. Note (Заметка) — Cool Slate */
+.prose .callout.note {
+  --block-accent: #9ca3af;
+  --block-badge-bg: rgba(156, 163, 175, 0.12);
+  --block-badge-border: rgba(156, 163, 175, 0.22);
+  --block-icon: "ℹ";
+}
+
+/* 8. Summary (Краткий итог) — Emerald */
+.prose .callout.summary {
+  --block-accent: #10b981;
+  --block-badge-bg: rgba(16, 185, 129, 0.12);
+  --block-badge-border: rgba(16, 185, 129, 0.25);
+  --block-icon: "◎";
+}
+
+/* 9. Rule (Правило) — Warm Amber */
+.prose .callout.rule {
+  --block-accent: #f59e0b;
+  --block-badge-bg: rgba(245, 158, 11, 0.12);
+  --block-badge-border: rgba(245, 158, 11, 0.25);
+  --block-icon: "§";
+}
+
+/* 10. Warning (Обратите внимание) — Vibrant Orange */
+.prose .callout.warning {
+  --block-accent: #fb923c;
+  --block-badge-bg: rgba(251, 146, 60, 0.13);
+  --block-badge-border: rgba(251, 146, 60, 0.28);
+  --block-icon: "▲";
+}
+
+/* 11. Tip (Подсказка) — Teal */
+.prose .callout.tip {
+  --block-accent: #2dd4bf;
+  --block-badge-bg: rgba(45, 212, 191, 0.12);
+  --block-badge-border: rgba(45, 212, 191, 0.25);
+  --block-icon: "⚡";
+}
+
+/* 12. Mistake (Частая ошибка) — Coral Red */
+.prose .callout.mistake {
+  --block-accent: #f87171;
+  --block-badge-bg: rgba(248, 113, 113, 0.13);
+  --block-badge-border: rgba(248, 113, 113, 0.28);
+  --block-icon: "✕";
+}
+
+/* 13. Task (Задание) — Bright Sky */
+.prose .callout.task {
+  --block-accent: #60a5fa;
+  --block-badge-bg: rgba(96, 165, 250, 0.12);
+  --block-badge-border: rgba(96, 165, 250, 0.25);
+  --block-icon: "✎";
+}
+
+/* 14. Translation (Перевод) — Sky Blue */
+.prose .callout.translation {
+  --block-accent: #38bdf8;
+  --block-badge-bg: rgba(56, 189, 248, 0.12);
+  --block-badge-border: rgba(56, 189, 248, 0.25);
+  --block-icon: "⇄";
+}
+
+/* 15. Pronunciation (Произношение) — Indigo */
+.prose .callout.pronunciation {
+  --block-accent: #818cf8;
+  --block-badge-bg: rgba(129, 140, 248, 0.12);
+  --block-badge-border: rgba(129, 140, 248, 0.25);
+  --block-icon: "♫";
+}
+
+/* 16. Source (Источник) — Silver */
+.prose .callout.source {
+  --block-accent: #a3a3a3;
+  --block-badge-bg: rgba(163, 163, 163, 0.12);
+  --block-badge-border: rgba(163, 163, 163, 0.22);
+  --block-icon: "↗";
+}
+
+/* 17. Formula (Формула) */
+.prose .callout.formula {
+  --block-accent: #e2e8f0;
+  --block-badge-bg: rgba(226, 232, 240, 0.1);
+  --block-badge-border: rgba(226, 232, 240, 0.2);
+  --block-icon: "∑";
+}
+
+.prose .callout.formula .callout-label {
+  font-family: var(--prose-mono);
+  letter-spacing: 0.08em;
+}
+
+.prose .callout.formula p,
+.prose .callout.formula li {
+  font-family: var(--prose-mono);
+  font-size: 0.92em;
+  color: #ffffff;
+}
+
+/* 18. Steps (По шагам) — Emerald */
+.prose .callout.steps {
+  --block-accent: #34d399;
+  --block-badge-bg: rgba(52, 211, 153, 0.12);
+  --block-badge-border: rgba(52, 211, 153, 0.25);
+  --block-icon: "→";
+}
+
+/* 19. Timeline (Хронология) — Amber */
+.prose .callout.timeline {
+  --block-accent: #fbbf24;
+  --block-badge-bg: rgba(251, 191, 36, 0.12);
+  --block-badge-border: rgba(251, 191, 36, 0.25);
+  --block-icon: "⏱";
+}
+
+/* 20. Dialogue (Диалог) — Indigo */
+.prose .callout.dialogue {
+  --block-accent: #818cf8;
+  --block-badge-bg: rgba(129, 140, 248, 0.12);
+  --block-badge-border: rgba(129, 140, 248, 0.25);
+  --block-icon: "💬";
+}
+
+/* 21. Terms (Термины) — Claude Terracotta */
+.prose .callout.terms {
+  --block-accent: #d97757;
+  --block-badge-bg: rgba(217, 119, 87, 0.14);
+  --block-badge-border: rgba(217, 119, 87, 0.3);
+  --block-icon: "🗂";
+}
+
+/* 22. Verse (Текст для разбора) — Slate */
+.prose .callout.verse {
+  --block-accent: #cbd5e1;
+  --block-badge-bg: rgba(203, 213, 225, 0.1);
+  --block-badge-border: rgba(203, 213, 225, 0.2);
+  --block-icon: "¶";
+  font-style: italic;
+}
+
+/* ==========================================================================
+   INTERACTIVE DETAILS / SPOILER
+   ========================================================================== */
+
+.prose .md-details {
+  margin: 1.8em 0;
+  border: 1px solid var(--prose-line);
+  border-radius: 8px;
+  background: #212121;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.18s ease;
+}
+
+.prose .md-details:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.prose .md-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 48px;
+  padding: 13px 20px;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--prose-sans);
+  font-size: 0.86em;
+  font-weight: 600;
+  color: #ffffff;
+  user-select: none;
+  transition: background-color 0.16s ease;
+}
+
+.prose .md-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.prose .md-details > summary::after {
+  content: "+";
+  flex: none;
+  font-family: var(--prose-sans);
+  font-size: 1.3em;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--prose-accent);
+  transition: transform 0.16s ease;
+}
+
+.prose .md-details[open] > summary {
+  background: #262626;
+  border-bottom: 1px solid var(--prose-line-soft);
+}
+
+.prose .md-details[open] > summary::after {
+  content: "−";
+}
+
+.prose .md-details > summary:hover {
+  background: #282828;
+}
+
+.prose .md-details > div {
+  padding: 20px;
+  background: #1e1e1e;
+}
+
+.prose .md-details > div > :first-child {
+  margin-top: 0;
+}
+
+.prose .md-details > div > :last-child {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   COMPARISONS & COLUMNS
+   ========================================================================== */
+
+.prose .md-comparison {
+  margin: 1.8em 0;
+  border: 1px solid var(--prose-line);
+  border-radius: 8px;
+  background: #212121;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.prose .md-comparison > .callout-label {
+  display: block;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--prose-line-soft);
+  font-family: var(--prose-sans);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--prose-accent);
+  background: #262626;
+}
+
+.prose .md-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  background: #1f1f1f;
+}
+
+.prose .md-columns > div {
+  min-width: 0;
+  padding: 20px;
+  border-right: 1px solid var(--prose-line-soft);
+  font-size: 0.95em;
+  line-height: 1.7;
+  color: var(--prose-soft);
+}
+
+.prose .md-columns > div:last-child {
+  border-right: 0;
+}
+
+.prose .md-columns > div > :first-child {
+  margin-top: 0;
+}
+
+.prose .md-columns > div > :last-child {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   TERMS & DEFINITION LISTS
+   ========================================================================== */
+
+.prose .md-terms {
+  margin: 1.8em 0;
+  border-top: 1px solid var(--prose-line);
+}
+
+.prose .md-terms dt {
+  padding-top: 16px;
+  font-family: var(--prose-sans);
+  font-size: 0.88em;
+  font-weight: 650;
+  color: #ffffff;
+}
+
+.prose .md-terms dd {
+  margin: 0.35em 0 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--prose-line-soft);
+  font-size: 0.96em;
+  line-height: 1.7;
+  color: var(--prose-soft);
+}
+
+.prose .md-terms dd + dd {
+  padding-top: 8px;
+}
+
+.prose .md-terms dd:last-child {
+  border-bottom: 0;
+}
+
+/* ==========================================================================
+   CHECKLISTS & TASKS
+   ========================================================================== */
+
+.prose .md-task {
+  list-style: none;
+  position: relative;
+  padding-left: 1.7em;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.prose .md-checkbox {
+  position: absolute;
+  left: 0;
+  top: 0.28em;
+  display: inline-grid;
+  place-items: center;
+  width: 1.15em;
+  height: 1.15em;
+  border: 1px solid #484848;
+  border-radius: 4px;
+  background: #252525;
+  font-family: var(--prose-sans);
+  font-size: 0.76em;
+  line-height: 1;
+  color: var(--prose-accent);
+  transition: all 0.15s ease;
+}
+
+.prose .md-task.checked {
+  color: var(--prose-muted);
+}
+
+.prose .md-task.checked .md-checkbox {
+  background: var(--prose-accent);
+  border-color: var(--prose-accent);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   FOOTNOTES
+   ========================================================================== */
+
+.prose .md-note-ref a {
+  padding: 0 3px;
+  font-family: var(--prose-sans);
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--prose-accent);
+  text-decoration: none;
+}
+
+.prose .md-footnotes {
+  margin-top: 3em;
+  padding-top: 1.6em;
+  border-top: 1px solid var(--prose-line);
+}
+
+.prose .md-footnotes h3 {
+  margin-top: 0;
+  font-size: 1.1em;
+  font-family: var(--prose-sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--prose-muted);
+}
+
+.prose .md-footnotes ol {
+  padding-left: 1.4em;
+  font-size: 0.88em;
+  line-height: 1.6;
+  color: var(--prose-muted);
+}
+
+.prose .md-note-back {
+  margin-left: 6px;
+  color: var(--prose-accent);
+  text-decoration: none;
+}
+
+/* ==========================================================================
+   RESPONSIVENESS
+   ========================================================================== */
+
+@media (max-width: 680px) {
+  .prose {
+    font-size: 17px;
+    margin-top: 20px;
+    line-height: 1.74;
+  }
+  .prose h2 {
+    font-size: 1.45em;
+  }
+  .prose h3 {
+    font-size: 1.22em;
+  }
+  .prose .callout {
+    padding: 15px 16px;
+    margin: 1.5em 0;
+    border-radius: 6px;
+  }
+  .prose .callout .callout-label {
+    font-size: 10px;
+    padding: 2px 8px;
+    margin-bottom: 9px;
+  }
+  .prose .md-details > summary {
+    padding: 12px 16px;
+  }
+  .prose .md-details > div {
+    padding: 16px;
+  }
+  .prose .md-columns > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--prose-line-soft);
+    padding: 16px;
+  }
+  .prose .md-columns > div:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* ==========================================================================
+   PRINT STYLES
+   ========================================================================== */
+
+@media print {
+  .prose {
+    max-width: none;
+    color: #111;
+  }
+  .prose p,
+  .prose li,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose strong,
+  .prose em {
+    color: #111 !important;
+  }
+  .prose h2 {
+    border-color: #999;
+  }
+  .prose .callout,
+  .prose .md-details,
+  .prose .md-comparison,
+  .prose blockquote {
+    background: transparent !important;
+    border-color: #999 !important;
+    color: #111 !important;
+    box-shadow: none;
+  }
+  .prose .callout .callout-label {
+    border: 1px solid #999 !important;
+    background: transparent !important;
+    color: #111 !important;
+  }
+  .prose .md-details > div {
+    display: block !important;
+  }
+  .prose .md-columns {
+    display: block;
+  }
+  .prose .table-scroll {
+    overflow: visible;
+    border-color: #999;
+  }
+  .prose .md-code,
+  .prose pre {
+    background: #f7f7f7 !important;
+    color: #111 !important;
+    border-color: #999;
+  }
+  .prose a {
+    color: #111;
+    text-decoration: underline;
+  }
+  .prose mark {
+    background: #eee;
+    color: #111;
+  }
+}
