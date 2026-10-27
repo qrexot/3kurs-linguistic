@@ -48,8 +48,30 @@ window.Markdown=(()=>{
    let p=[inf(l)];i++;while(i<lines.length&&lines[i].trim()&&!special(lines[i],lines[i+1]))p.push(inf(lines[i++]));out.push('<p>'+p.join('<br>')+'</p>');
   }return out.join('');
  }
+ // Older materials sometimes place a closing marker at the end of a paragraph.
+ // Normalize only a marker outside fenced/inline code and inside a known block.
+ function normalizeBlocks(raw){
+  const out=[];let fenced=false,open=0;
+  for(const original of String(raw||'').replace(/\r/g,'').replace(/\t/g,'    ').split('\n')){
+   let line=original;
+   if(/^\s*```/.test(line)){fenced=!fenced;out.push(line);continue}
+   if(fenced){out.push(line);continue}
+   const start=line.match(/^:::([a-z]+)(?:\s|$)/);
+   const known=start&&(Object.hasOwn(labels,start[1])||['details','columns'].includes(start[1]));
+   const standalone=line.trim()===':::';
+   if(standalone){out.push(line);open=Math.max(0,open-1);continue}
+   if(known)open++;
+   const suffix=line.match(/^(.*?\S)\s+:::\s*$/);
+   // Backticks delimit literal inline code: never rewrite its contents.
+   if(open>0&&suffix&&(suffix[1].match(/`/g)||[]).length%2===0){
+    out.push(suffix[1], ':::');open--;continue;
+   }
+   out.push(line);
+  }
+  return out;
+ }
  function render(raw){const ctx={prefix:'md-'+(++sequence),notes:new Map(),used:[],refs:Object.create(null),h:0,ref:0};let fenced=false,nest=0;const lines=[];
-  for(const line of String(raw||'').replace(/\r/g,'').replace(/\t/g,'    ').split('\n')){if(/^```/.test(line))fenced=!fenced;if(!fenced){if(/^:::[a-z]+(?:\s|$)/.test(line))nest++;if(line.trim()===':::')nest=Math.max(0,nest-1)}const note=!fenced&&nest===0&&line.match(/^\[\^([A-Za-z0-9_-]{1,40})\]:\s*(.*)$/);if(note)ctx.notes.set(note[1],note[2]);else lines.push(line)}
+  for(const line of normalizeBlocks(raw)){if(/^```/.test(line))fenced=!fenced;if(!fenced){if(/^:::[a-z]+(?:\s|$)/.test(line))nest++;if(line.trim()===':::')nest=Math.max(0,nest-1)}const note=!fenced&&nest===0&&line.match(/^\[\^([A-Za-z0-9_-]{1,40})\]:\s*(.*)$/);if(note)ctx.notes.set(note[1],note[2]);else lines.push(line)}
   let html=blocks(lines,ctx);if(ctx.used.length)html+='<section class="md-footnotes" aria-label="Сноски"><h3>Примечания</h3><ol>'+ctx.used.map((key,i)=>'<li id="'+ctx.prefix+'-note-'+key+'">'+inline(ctx.notes.get(key),ctx,0,false)+' '+ctx.refs[key].map((id,j)=>'<a class="md-note-back" href="#'+id+'" aria-label="Вернуться к сноске '+(i+1)+(j?' ('+(j+1)+')':'')+'">↩</a>').join(' ')+'</li>').join('')+'</ol></section>';return html;
  }
  function reveal(target){for(let parent=target?.parentElement;parent;parent=parent.parentElement)if(parent.matches('details'))parent.open=true;return target}
