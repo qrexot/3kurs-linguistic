@@ -686,7 +686,7 @@ async function editor(){
 
   let data,requestId=0;
   const load=async()=>{
-    const run=++requestId,r=await DB.rpc('admin_stats',{p_days:Number($('#stats-range').value)});
+    const run=++requestId,days=Number($('#stats-range').value),[r,extra]=await Promise.all([DB.rpc('admin_stats',{p_days:days}),DB.rpc('admin_analytics_v2',{p_days:days})]);
     if(run!==requestId)return;
     data=r;
     const max=Math.max(1,...(data.popular||[]).map(p=>Number(p.views)));
@@ -710,6 +710,7 @@ async function editor(){
         </div>
       </div>
 
+      <section class="panel stats-timeline"><h2>Активность по дням</h2><p class="muted small">Посетители и открытия лекций по московскому времени</p><div class="timeline-list">${(extra.daily||[]).slice(-14).reverse().map(d=>`<div class="timeline-row"><strong>${esc(d.date_key)}</strong><span>${Number(d.visitors)} посет.</span><span>${Number(d.views)} открытий</span></div>`).join('')||'<p class="muted">За этот период данных пока нет.</p>'}</div></section><section class="panel stats-modes"><h2>Что открывают</h2><div class="mode-list">${(extra.modes||[]).map(m=>`<div class="timeline-row"><span>${esc(({lecture:'Лекции',full:'Транскрипции',assignment:'Задания',extra:'Доп. материалы'})[m.mode]||m.mode)}</span><strong>${Number(m.views)}</strong></div>`).join('')||'<p class="muted">Нет данных.</p>'}</div></section>
       <div class="stats-grid">
         <section class="panel stats-section">
           <header><h2>Чаще открывают</h2></header>

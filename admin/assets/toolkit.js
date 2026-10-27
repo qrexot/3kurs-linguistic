@@ -119,8 +119,8 @@ window.AdminKit=(()=>{
         <div id="kit-site-status" role="status" class="kit-site-card">Проверяем состояние сайта…</div>
         <a class="kit-request-card" href="visitors.html">
           <div class="kit-request-info">
-            <span>Заявки на доступ</span>
-            <small>Посетители в очереди</small>
+            <span>Посетители</span>
+            <small>Карточки посетителей</small>
           </div>
           <b id="kit-pending" class="kit-pending-badge">…</b>
         </a>
@@ -159,13 +159,13 @@ window.AdminKit=(()=>{
 
   document.querySelector('#kit-audit').onclick=()=>audit(ctx);
   document.querySelectorAll('[data-kit-preview]').forEach(b=>b.onclick=()=>preview(live.find(l=>l.id===b.dataset.kitPreview),ctx.subjects));
-  const result=await Promise.allSettled([DB.rpc('site_status',{}),DB.rpc('admin_access_requests',{p_status:'pending',p_search:'',p_limit:1,p_offset:0})]);
+  const result=await Promise.allSettled([DB.rpc('site_status',{}),DB.rpc('admin_visitors_v2',{p_status:'active',p_search:'',p_limit:1,p_offset:0})]);
   const status=document.querySelector('#kit-site-status');
   if(result[0].status==='fulfilled'&&typeof result[0].value?.paused==='boolean'){
     const paused=result[0].value.paused;
-    status.innerHTML='<div class="kit-site-indicator '+(paused?'paused':'')+'"><i></i><div><strong>'+(paused?'Сайт временно отключён':'Сайт открыт')+'</strong><span>'+(paused?'Посетители видят экран ожидания.':'Одобренные посетители могут читать лекции.')+'</span></div></div>';
+    status.innerHTML='<div class="kit-site-indicator '+(paused?'paused':'')+'"><i></i><div><strong>'+(paused?'Сайт временно отключён':'Сайт открыт')+'</strong><span>'+(paused?'Посетители видят экран ожидания.':'Посетители могут читать опубликованные материалы.')+'</span></div></div>';
   }else status.textContent='Не удалось проверить состояние. Откройте настройки сайта.';
-  document.querySelector('#kit-pending').textContent=result[1].status==='fulfilled'?String(result[1].value?.pending??result[1].value?.total??'—'):'—';
+  document.querySelector('#kit-pending').textContent=result[1].status==='fulfilled'?String(result[1].value?.summary?.groups??result[1].value?.total??'—'):'—';
 }
  return {csv,exportSelected,duplicates,issues,preview,audit,overview};
 })();

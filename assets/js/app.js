@@ -61,7 +61,7 @@
     else history.pushState({url:target.href},'',target.href);
    }
    page=resolved.page;params=resolved.params;selected=params.get('subject')||'';
-   document.body.dataset.page=page;updateChrome(page);if(page!=='reader')document.body.classList.remove('reading-focus');
+   document.body.dataset.page=page;updateChrome(page);if(deviceId)DB.rpc('record_navigation',{p_device_id:deviceId,p_page:page}).catch(()=>{});if(page!=='reader')document.body.classList.remove('reading-focus');
    if(main&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
     main.classList.add('is-transitioning');
     await new Promise(r=>setTimeout(r,40));
@@ -295,7 +295,7 @@
  }
  function renderAbout(info){
   document.title=info.title+' — материалы занятий';
-  $('#main').innerHTML=`<div class="about-layout"><a class="back-link" href="index.html">${icon('back')} К материалам</a><header class="about-heading"><span class="eyebrow">От автора</span><h1>${esc(info.title)}</h1></header><article class="prose about-copy">${Markdown.render(info.body)}</article><div class="about-signature">made by <strong>Leonard</strong></div></div>`;
+  $('#main').innerHTML=`<div class="about-layout"><a class="back-link" href="index.html">${icon('back')} К материалам</a><header class="about-heading"><span class="eyebrow">От автора</span><h1>${esc(info.title)}</h1></header><article class="prose about-copy">${Markdown.render(info.body)}</article><p class="analytics-disclosure">Сайт сохраняет сведения о посещениях: открытые страницы и материалы, примерное активное время и технические данные браузера и устройства. Для определения примерного региона используется IP-адрес; данные о сети могут быть неточны и обрабатываются внешними сервисами. Статистика доступна владельцу сайта.</p><div class="about-signature">made by <strong>Leonard</strong></div></div>`;
   UI.ready();
  }
 
@@ -453,7 +453,7 @@
   if(profile.blocked){lock();return}
   try{await track()}catch(e){if(/blocked|access_denied/.test(e.message)){lock();return}toast('Связь со статистикой временно недоступна.')}
   if(locked)return;
-  await VisitorAccess.ensure();
+  // Access is automatic for non-blocked sessions.
   if(locked)return;
   accessReady=true;
 
@@ -469,7 +469,7 @@
 
   poll=setInterval(async()=>{
    if(document.hidden||locked)return;
-   try{const p=await DB.profile();if(p.blocked||(!p.is_admin&&p.access_state!=='approved')){locked=true;clearInterval(poll);clearInterval(tracking);location.reload()}}catch{}
+   try{const p=await DB.profile();if(p.blocked){locked=true;clearInterval(poll);clearInterval(tracking);location.reload()}}catch{}
   },20000);
 
   if(!cached){
