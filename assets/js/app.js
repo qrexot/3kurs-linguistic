@@ -39,7 +39,7 @@
   });
  }
  function shell(){
-  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['saved','saved.html','star','Избранное']];
+  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['saved','saved.html','star','Избранное'],['chat','chat.html','users','Чат']];
   const links=nav.map(([id,file,ic,label])=>{const on=page===id||(page==='reader'&&id==='library');return `<a href="${file}" class="${on?'active':''}" ${on?'aria-current="page"':''}>${icon(ic)}<span>${label}</span></a>`}).join('');
   $('#app').innerHTML=`<a class="skip-link" href="#main">К материалам</a><aside class="sidebar"><a class="side-mark" href="index.html" aria-label="Материалы занятий"><div class="mark">${icon('sparkle')}</div><span>Материалы</span></a><div class="nav-label">БИБЛИОТЕКА</div><nav class="side-nav" aria-label="Основная навигация">${links}</nav><div class="side-bottom"><span>made by <strong>Leonard</strong></span><a href="privacy.html">О сайте ${icon("arrow")}</a></div></aside><div class="shell"><header class="topbar"><div class="crumb"><a class="crumb-root" href="index.html">Материалы</a> ${icon('chevron')} <b>${({library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте'})[page]}</b></div><div class="top-right"><a class="top-help" href="privacy.html">О сайте</a></div></header><main class="content" id="main" tabindex="-1">${UI.skeleton(page)}</main>${App.footer()}</div><nav class="mobile-nav" aria-label="Основная навигация на телефоне">${links}</nav>`;
  }
