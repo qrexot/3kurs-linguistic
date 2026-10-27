@@ -1,7 +1,7 @@
 'use strict';
 window.SearchUI=(()=>{
  const controls=[];let opened=null;const compact=matchMedia('(max-width: 760px)');
- function responsive(){close();for(const c of controls){c.select.hidden=!compact.matches;c.button.hidden=compact.matches;c.wrap.classList.toggle('native-filter',compact.matches)}}
+ function responsive(){close();for(const c of controls){c.select.hidden=true;c.button.hidden=false;c.wrap.classList.remove('native-filter')}}
  compact.addEventListener('change',responsive);
  function close(restore=false){if(!opened)return;const c=opened;opened=null;c.menu.hidden=true;c.button.setAttribute('aria-expanded','false');c.wrap.classList.remove('menu-open');if(restore)c.button.focus()}
  function sync(){for(const c of controls){c.label.textContent=c.select.selectedOptions[0]?.textContent||'';c.button.setAttribute('aria-label',c.name+': '+c.label.textContent);c.options.forEach((b,i)=>{const chosen=i===c.select.selectedIndex;b.setAttribute('aria-selected',String(chosen));b.classList.toggle('selected',chosen)})}}

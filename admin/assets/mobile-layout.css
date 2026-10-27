@@ -247,3 +247,23 @@ body.admin { --admin-nav-height:64px; --editor-bar-height:100px; min-width:280px
   .admin .planner-open-btn { grid-row:1; grid-column:2; }
   .admin .planner-item-meta,.admin .structure-item-meta { flex-wrap:wrap; }
 }
+/* Search, recent items and menus */
+.quiet-admin .people-search { display:flex; align-items:center; gap:10px; padding:0 14px; min-width:0; min-height:48px; border:1px solid var(--line); border-radius:10px; background:#1c1c1c; }
+.quiet-admin .people-search svg { position:static; flex:0 0 18px; width:18px; height:18px; color:var(--muted); }
+.quiet-admin .people-search input, .quiet-admin .people-search input:focus { display:block; flex:1; width:0; min-width:0; min-height:46px; padding:0; border:0; outline:0; box-shadow:none; background:transparent; }
+.quiet-admin .people-search:focus-within { border-color:var(--accent); }
+.quiet-admin .kit-recent-row { display:flex; align-items:center; gap:14px; min-width:0; padding:14px; }
+.quiet-admin .kit-recent-info { flex:1 1 0; min-width:0; }
+.quiet-admin .kit-recent-title { display:block; white-space:normal; overflow-wrap:anywhere; line-height:1.4; }
+.quiet-admin .kit-recent-meta { display:flex; flex-wrap:wrap; align-items:center; gap:6px; line-height:1.4; }
+.quiet-admin .kit-recent-actions { display:flex; flex:0 0 auto; gap:8px; }
+.quiet-admin .kit-recent-actions .btn { min-height:44px; }
+.quiet-admin .filter-menu { max-height:min(55dvh,360px); overflow-y:auto; z-index:150; }
+.quiet-admin .filter-option { min-height:44px; white-space:normal; line-height:1.4; text-align:left; }
+@media(max-width:760px) {
+ .quiet-admin .kit-recent-row { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+ .quiet-admin .kit-recent-actions { display:grid; grid-template-columns:1fr 1fr; width:100%; }
+ .quiet-admin .kit-recent-actions .btn { width:100%; min-width:0; }
+ .quiet-admin .kit-recent-meta span { width:auto; white-space:normal; }
+ .quiet-admin .people-toolbar { overflow:visible; }
+}
