@@ -5,7 +5,7 @@ window.DB = (()=>{
  function save(s){session=s?.access_token?{...s,expires_at:s.expires_at||Math.floor(Date.now()/1000)+(s.expires_in||3600)}:null;if(session)App.storage.set(key,session);else App.storage.del(key)}
  async function request(path,options={},auth=true,retry=true){
   if(auth&&session&&session.expires_at<Date.now()/1000+45)await refresh();
-  const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),18000);
+  const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),options.body instanceof Blob?180000:18000);
   try{const r=await fetch(CONFIG.url+path,{...options,signal:abort.signal,headers:{apikey:CONFIG.key,'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+(session?.access_token||CONFIG.key)}:{}),...options.headers}});
    const raw=await r.text();let data;try{data=raw?JSON.parse(raw):null}catch{data=null}
    if(r.status===401&&auth&&session&&retry){await refresh();return request(path,options,auth,false)}
