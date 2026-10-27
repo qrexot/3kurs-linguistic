@@ -267,3 +267,17 @@ body.admin { --admin-nav-height:64px; --editor-bar-height:100px; min-width:280px
  .quiet-admin .kit-recent-meta span { width:auto; white-space:normal; }
  .quiet-admin .people-toolbar { overflow:visible; }
 }
+/* Keep the overview cards and their actions inside the viewport. */
+@media (max-width:760px) {
+ .admin.quiet-admin .kit-recent-list .kit-recent-row { display:flex; flex-direction:column; align-items:stretch; width:100%; min-width:0; padding:14px; }
+ .admin.quiet-admin .kit-recent-list .kit-recent-info { width:100%; min-width:0; }
+ .admin.quiet-admin .kit-recent-list .kit-recent-meta { display:flex; flex-wrap:wrap; width:100%; min-width:0; gap:6px; }
+ .admin.quiet-admin .kit-recent-list .kit-recent-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; min-width:0; }
+ .admin.quiet-admin .kit-recent-list .kit-recent-actions>* { position:static; min-width:0; width:100%; white-space:normal; }
+}
+.admin.quiet-admin .styled-filter > select[hidden] { display:none!important; }
+.admin.quiet-admin .styled-filter > .filter-trigger:not([hidden]) { display:flex; width:100%; min-height:48px; }
+.admin.quiet-admin .styled-filter > .filter-menu:not([hidden]) { display:block; position:absolute; top:calc(100% + 6px); left:0; right:auto; width:100%; min-width:100%; max-height:min(50dvh,320px); overflow-y:auto; z-index:200; padding:6px; background:#242424; border:1px solid #46403e; border-radius:12px; box-shadow:0 14px 36px #000a; }
+.admin.quiet-admin .styled-filter .filter-option { display:flex; align-items:center; justify-content:space-between; width:100%; padding:11px 12px; min-height:46px; border:0; border-radius:8px; color:#eee; background:transparent; text-align:left; font-size:14px; }
+.admin.quiet-admin .styled-filter .filter-option.selected { color:#f2a487; background:#40302b; }
+.admin.quiet-admin .styled-filter .filter-option:focus-visible { outline:2px solid #d97757; outline-offset:-2px; }
