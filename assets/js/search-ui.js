@@ -1,6 +1,8 @@
 'use strict';
 window.SearchUI=(()=>{
- const controls=[];let opened=null;
+ const controls=[];let opened=null;const compact=matchMedia('(max-width: 760px)');
+ function responsive(){close();for(const c of controls){c.select.hidden=!compact.matches;c.button.hidden=compact.matches;c.wrap.classList.toggle('native-filter',compact.matches)}}
+ compact.addEventListener('change',responsive);
  function close(restore=false){if(!opened)return;const c=opened;opened=null;c.menu.hidden=true;c.button.setAttribute('aria-expanded','false');c.wrap.classList.remove('menu-open');if(restore)c.button.focus()}
  function sync(){for(const c of controls){c.label.textContent=c.select.selectedOptions[0]?.textContent||'';c.button.setAttribute('aria-label',c.name+': '+c.label.textContent);c.options.forEach((b,i)=>{const chosen=i===c.select.selectedIndex;b.setAttribute('aria-selected',String(chosen));b.classList.toggle('selected',chosen)})}}
  function open(c,index){close();sync();opened=c;c.menu.hidden=false;c.button.setAttribute('aria-expanded','true');c.wrap.classList.add('menu-open');const at=index??Math.max(0,c.select.selectedIndex);c.options[at]?.focus({preventScroll:true});c.options[at]?.scrollIntoView({block:'nearest'})}
@@ -32,7 +34,7 @@ window.SearchUI=(()=>{
     e.preventDefault();c.options[next]?.focus();
    };
    select.addEventListener('change',sync);wrap.append(button,menu);controls.push(c);
-  }sync();
+  }sync();responsive();
  }
  document.addEventListener('pointerdown',e=>{if(opened&&!opened.wrap.contains(e.target))close()});
  document.addEventListener('focusin',e=>{if(opened&&!opened.wrap.contains(e.target))close()});

@@ -232,7 +232,7 @@ async function editor(){
     </div>
   </div>
   <form id="editor-form" class="clean-editor-canvas" autocomplete="off">
-    <input name="title" id="lecture-title-input" class="doc-title-input" maxlength="180" required value="${esc(l.title)}" placeholder="Тема занятия…" autocomplete="off">
+    <label class="sr-only" for="lecture-title-input">Тема занятия</label><textarea name="title" id="lecture-title-input" class="doc-title-input" rows="2" maxlength="180" required placeholder="Тема занятия…" autocomplete="off">${esc(l.title)}</textarea>
     <div class="property-strip">
       <label class="prop-item">
         <span class="prop-label">Предмет</span>
@@ -336,7 +336,7 @@ async function editor(){
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
           <span id="preview-toggle-text">Скрыть просмотр</span>
         </button>
-        <button type="button" class="btn btn-save-draft" id="btn-save-draft">Сохранить черновик</button>
+        <button type="button" class="btn btn-save-draft" id="btn-save-draft">Сохранить</button>
         <button type="button" class="btn primary btn-publish" id="btn-publish-lecture">${icon('check')} Опубликовать</button>
         <details class="more-menu">
           <summary class="btn ghost icon-btn" title="Дополнительно">···</summary>
@@ -421,7 +421,7 @@ async function editor(){
   f.elements.subject_id.addEventListener('change',changed);
   f.elements.title.addEventListener('input',changed);
 
-  if(l.starts_at||l.pair_number||l.summary){
+  if((l.starts_at||l.pair_number||l.summary)&&!matchMedia('(max-width: 760px)').matches){
     $('#property-drawer').hidden=false;
     $('#btn-toggle-extra').setAttribute('aria-expanded','true');
     $('#btn-toggle-extra span').textContent='Детали ▴';
@@ -433,12 +433,18 @@ async function editor(){
     $('#btn-toggle-extra span').textContent=open?'Детали ▴':'Детали ▾';
   };
 
-  let previewVisible=true;
-  $('#btn-toggle-preview').onclick=()=>{
-    previewVisible=!previewVisible;
+  let previewVisible=!matchMedia('(max-width: 1000px)').matches;
+  const syncPreview=()=>{
     $('#editor-layout').classList.toggle('hide-preview',!previewVisible);
     $('#preview-pane').hidden=!previewVisible;
-    $('#preview-toggle-text').textContent=previewVisible?'Скрыть просмотр':'Показать просмотр';
+    $('#preview-toggle-text').textContent=previewVisible?'Скрыть просмотр':'Предпросмотр';
+    $('#btn-toggle-preview').setAttribute('aria-expanded',String(previewVisible));
+  };
+  syncPreview();
+  $('#btn-toggle-preview').onclick=()=>{
+    previewVisible=!previewVisible;
+    syncPreview();
+    if(previewVisible&&matchMedia('(max-width: 1000px)').matches)$('#preview-pane').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
   };
 
   // Smart Paste
@@ -801,6 +807,7 @@ function help(){FormatTools.help($('#main'))}
   $('#about-form').onsubmit=guard(async e=>{e.preventDefault();const version=editVersion,b=$('#about-save'),payload={p_title:title.value.trim(),p_body:body.value,p_revision:record.revision};if(!payload.p_title)throw new Error('Введите заголовок');busy(b,true);state.textContent='Сохраняем…';try{record=await DB.rpc('save_site_about',payload);if(!record?.revision)throw new Error('Сервер не подтвердил сохранение');dirty=editVersion!==version;state.textContent=dirty?'Есть новые несохранённые изменения':'Сохранено · '+time(record.updated_at);toast('Описание обновлено')}catch(err){state.textContent=err.message==='content_conflict'?'Описание изменено в другой вкладке. Скопируйте свой текст и обновите страницу.':'Не удалось сохранить. Ваш текст остался в редакторе.';if(err.message!=='content_conflict')toast(errorText(err))}finally{busy(b,false)}});
  }
  function loginScreen(message=''){
+  document.body.classList.add('admin-logged-out');
   $('#main').innerHTML=`
     <div class="login-container">
       <section class="login-card panel">
@@ -850,7 +857,7 @@ function help(){FormatTools.help($('#main'))}
   };
  }
  
-async function start(){shell();if(!DB.session){if(page==='help'){help();AdminStudio.enhance();return}loginScreen();return}try{profile=await DB.profile();if(profile.is_admin!==true||profile.blocked!==false){await DB.logout();loginScreen('У этого аккаунта нет прав администратора.');return}document.querySelectorAll('.account-chip').forEach(x=>x.textContent=profile.display_name||'Администратор');if(['schedule','overview','lectures','trash','structure','editor'].includes(page))await base();await ({schedule:()=>AdminSchedule.planner({lectures,subjects,weeks}),overview:()=>AdminKit.overview({lectures,subjects,weeks}),lectures:materials,trash:materials,structure,editor,visitors,stats,help,about}[page]||materials)();AdminStudio.enhance()}catch(e){$('#main').innerHTML=empty('Не удалось загрузить',(/extra_text|extra_images|lecture-extras/.test(e.message)?'Выполните SQL 07 из EXTRAS_UPDATE.html. Старые данные сохранятся.':/assignment_text/.test(e.message)?'Выполните SQL 06 из TASKS_UPDATE.html. Старые данные сохранятся.':/deleted_at|lecture_revisions|admin_material|schema cache/.test(e.message)?'Примените 05_admin_workspace.sql из ADMIN_UPDATE.html. Не запускайте заново 01_setup.sql.':errorText(e)),' <button class="btn" id="reload">Повторить</button>');$('#reload').onclick=()=>location.reload()}}
+async function start(){shell();if(!DB.session){if(page==='help'){help();AdminStudio.enhance();return}loginScreen();return}try{profile=await DB.profile();if(profile.is_admin!==true||profile.blocked!==false){await DB.logout();loginScreen('У этого аккаунта нет прав администратора.');return}document.body.classList.remove('admin-logged-out');document.querySelectorAll('.account-chip').forEach(x=>x.textContent=profile.display_name||'Администратор');if(['schedule','overview','lectures','trash','structure','editor'].includes(page))await base();await ({schedule:()=>AdminSchedule.planner({lectures,subjects,weeks}),overview:()=>AdminKit.overview({lectures,subjects,weeks}),lectures:materials,trash:materials,structure,editor,visitors,stats,help,about}[page]||materials)();AdminStudio.enhance()}catch(e){$('#main').innerHTML=empty('Не удалось загрузить',(/extra_text|extra_images|lecture-extras/.test(e.message)?'Выполните SQL 07 из EXTRAS_UPDATE.html. Старые данные сохранятся.':/assignment_text/.test(e.message)?'Выполните SQL 06 из TASKS_UPDATE.html. Старые данные сохранятся.':/deleted_at|lecture_revisions|admin_material|schema cache/.test(e.message)?'Примените 05_admin_workspace.sql из ADMIN_UPDATE.html. Не запускайте заново 01_setup.sql.':errorText(e)),' <button class="btn" id="reload">Повторить</button>');$('#reload').onclick=()=>location.reload()}}
 
  document.querySelectorAll('[data-admin-logout]').forEach(b=>b.onclick=guard(async()=>{if(dirty&&!await confirmAction('Выйти без сохранения?','Несохранённые изменения будут потеряны.'))return;dirty=false;await DB.logout();loginScreen()}));
  window.addEventListener('session-lost',()=>{window.dispatchEvent(new Event('save-draft-now'));dirty=false;loginScreen('Сессия завершена. Войдите снова.')});

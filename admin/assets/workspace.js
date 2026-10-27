@@ -32,7 +32,8 @@ window.AdminDesk=(()=>{
       ${icon('search')}
       <input id="admin-search" type="search" placeholder="Поиск по названию, предмету, словам…" aria-label="Поиск материалов">
     </label>
-    <div class="desk-filter-controls">
+    <button type="button" class="btn desk-filter-toggle" aria-controls="desk-filter-controls" aria-expanded="false">${icon("settings")} Фильтры <span id="desk-filter-total" hidden></span></button>
+    <div class="desk-filter-controls" id="desk-filter-controls">
       <div class="custom-select-wrap">
         <select id="desk-subject" aria-label="Предмет">
           <option value="">Все предметы</option>
@@ -60,8 +61,8 @@ window.AdminDesk=(()=>{
         </select>
         ${icon('chevron')}
       </div>
-      <button type="button" class="btn ghost icon-btn" id="desk-reset" title="Сбросить фильтры">✕</button>
-      <button type="button" class="btn ghost icon-btn" id="desk-refresh" title="Обновить список">${icon('clock')}</button>
+      <button type="button" class="btn ghost icon-btn" id="desk-reset" title="Сбросить фильтры" aria-label="Сбросить фильтры">✕</button>
+      <button type="button" class="btn ghost icon-btn" id="desk-refresh" title="Обновить список" aria-label="Обновить список">${icon('clock')}</button>
     </div>
     <input type="hidden" id="desk-week" value="">
     <input type="hidden" id="desk-from" value="">
@@ -85,6 +86,8 @@ window.AdminDesk=(()=>{
     <button class="btn btn-sm" id="desk-next">Далее →</button>
   </nav>`;
 
+  const filters=$('.desk-filters'),toggle=$('.desk-filter-toggle');
+  toggle.onclick=()=>{const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));filters.classList.toggle('filters-expanded',open)};
   const filterIds=['admin-search','desk-subject','desk-week','pub-filter','desk-sort','desk-from','desk-to','desk-page-size'];
   const stateKey='admin-material-filters:'+(trash?'trash':'live');
   try{
@@ -129,6 +132,8 @@ window.AdminDesk=(()=>{
 
   function draw(){
     SearchUI.sync();
+    const total=Number(!!$('#desk-subject').value)+Number($('#pub-filter').value!=='all')+Number($('#desk-sort').value!=='date');
+    $('#desk-filter-total').hidden=!total;$('#desk-filter-total').textContent=total;
     const live=data.filter(l=>!l.deleted_at);
     const summary=$('#desk-meta-summary');
     if(summary){

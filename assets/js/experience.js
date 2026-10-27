@@ -1,20 +1,22 @@
 'use strict';
 window.UI=(()=>{
  const {$,esc,icon,storage}=App;const page=document.body.dataset.page;
- const viewKey='lecture-view:'+page+':'+(new URLSearchParams(location.search).get('subject')||'');
+ const viewKey=()=>'lecture-view:'+document.body.dataset.page+':'+(new URLSearchParams(location.search).get('subject')||'');
  const get=(k,d={})=>{try{return JSON.parse(sessionStorage.getItem(k))||d}catch{return d}};
  const set=(k,v)=>{try{sessionStorage.setItem(k,JSON.stringify(v))}catch{}};
  const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  let initialList=true,restoreFrame=0,readerId=null,readerMode=null,readingReady=false,readerTimer,progressFrame=0;
- const listState=()=>get(viewKey);
+ let activeListKey=viewKey();
+ const listState=()=>get(activeListKey);
+ function beginList(){activeListKey=viewKey();initialList=true;return listState()}
  function announce(text){let live=$('#ui-announcement');if(!live){live=document.createElement('div');live.id='ui-announcement';live.className='sr-only';live.role='status';document.body.append(live)}live.textContent=text}
- function saveList(){if(!$('#search'))return;const old=listState();set(viewKey,{...old,search:$('#search').value,sort:$('#sort').value,subject:$('.chip.active')?.dataset.subject||'',tasksOnly:$('#tasks-only')?.getAttribute('aria-pressed')==='true',visibleLimit:Number($('#list')?.dataset.visibleLimit)||40,y:scrollY})}
+ function saveList(){if(!$('#search'))return;const old=listState();set(activeListKey,{...old,search:$('#search').value,sort:$('#sort').value,subject:$('.chip.active')?.dataset.subject||'',tasksOnly:$('#tasks-only')?.getAttribute('aria-pressed')==='true',visibleLimit:Number($('#list')?.dataset.visibleLimit)||40,y:scrollY})}
  function restoreList(){const state=listState();requestAnimationFrame(()=>{restoreFrame=requestAnimationFrame(()=>{window.scrollTo({top:state.y||0,behavior:'instant'});initialList=false})})}
  function listRendered(){
   const state=listState(),closed=new Set(state.closed||[]),query=$('#search')?.value.trim();
   document.querySelectorAll('.date-group').forEach(group=>{
    group.open=!!query||!closed.has(group.dataset.date);
-   group.ontoggle=()=>{if(query)return;const next=listState();const days=new Set(next.closed||[]);if(group.open)days.delete(group.dataset.date);else days.add(group.dataset.date);set(viewKey,{...next,closed:[...days]});updateCollapse()};
+   group.ontoggle=()=>{if(query)return;const next=listState();const days=new Set(next.closed||[]);if(group.open)days.delete(group.dataset.date);else days.add(group.dataset.date);set(activeListKey,{...next,closed:[...days]});updateCollapse()};
   });
   const button=$('#collapse-days');if(button)button.onclick=()=>{const groups=[...document.querySelectorAll('.date-group')];const open=groups.some(x=>x.open);groups.forEach(x=>x.open=!open);updateCollapse()};
   updateCollapse();if(!initialList)saveList();
@@ -54,5 +56,5 @@ window.UI=(()=>{
   searchAnimations.push(list.animate([{opacity:.65,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],{duration:220,easing:'cubic-bezier(.22,1,.36,1)'}));
 
  }
- return {searchState,searchResults,listState,restoreList,listRendered,announce,skeleton,ready,readerRendered,saveReader};
+ return {searchState,searchResults,saveList,beginList,listState,restoreList,listRendered,announce,skeleton,ready,readerRendered,saveReader};
 })();
