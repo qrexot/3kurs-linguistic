@@ -7,3 +7,6 @@
 a,button,summary,input,select,textarea,.attach{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 :focus{outline:none}
 button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #df8769;outline-offset:3px}
+
+/* Inline media and an accessible photo viewer */
+.file-slot{margin-top:10px}.file-slot .file-link{display:inline-flex;margin-top:8px;max-width:100%;word-break:break-word}.photo-open{display:block;padding:0;border:0;border-radius:10px;background:transparent;max-width:100%;cursor:zoom-in}.photo-open .photo{margin:0;max-height:360px}.chat-video{display:block;width:min(100%,400px);max-height:400px;border-radius:10px;background:#111}.photo-view{width:min(96vw,1000px);max-width:96vw;max-height:92vh;padding:42px 12px 12px;overflow:auto;background:#1b1b1b;border:1px solid #444}.photo-view form{position:absolute;right:10px;top:8px}.photo-view form button{width:34px;height:34px;border:0;border-radius:50%;background:#333;color:#fff;font-size:18px}.photo-view img{display:block;max-width:100%;max-height:calc(92vh - 60px);width:auto;height:auto;object-fit:contain;margin:auto}
