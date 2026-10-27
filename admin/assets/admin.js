@@ -247,16 +247,8 @@ async function editor(){
         <span class="prop-label">Дата</span>
         <input name="lecture_date" type="date" value="${esc(l.lecture_date)}" required id="lecture-date">
       </label>
-      <div class="prop-item prop-week-badge" id="auto-week-badge" title="Неделя синхронизируется автоматически с выбранной датой">
-        <span class="prop-label">Неделя</span>
-        <span class="week-chip" id="auto-week-text">${esc(week(l.week_id))}</span>
-        <input type="hidden" name="week_id" id="lecture-week-id" value="${l.week_id}">
-      </div>
+      <input type="hidden" name="week_id" id="lecture-week-id" value="${l.week_id}">
       <div class="prop-spacer"></div>
-      <button type="button" class="btn magic-btn" id="btn-smart-paste" title="Вставить готовый ответ от нейросети (Claude, ChatGPT)">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
-        <span>Вставить из нейросети</span>
-      </button>
       <button type="button" class="btn ghost btn-extra-toggle" id="btn-toggle-extra" aria-expanded="false">
         <span>Детали ▾</span>
       </button>
@@ -410,12 +402,7 @@ async function editor(){
   function syncWeekFromDate(){
     const curDate=f.elements.lecture_date.value;
     const matched=weeks.find(w=>curDate>=w.starts_on&&curDate<=w.ends_on);
-    if(matched){
-      f.elements.week_id.value=matched.id;
-      $('#auto-week-text').textContent=matched.title;
-    }else if(weeks.length){
-      $('#auto-week-text').textContent=week(f.elements.week_id.value);
-    }
+    if(matched)f.elements.week_id.value=matched.id;
   }
   f.elements.lecture_date.addEventListener('change',()=>{syncWeekFromDate();changed();});
   f.elements.subject_id.addEventListener('change',changed);
@@ -445,58 +432,6 @@ async function editor(){
     previewVisible=!previewVisible;
     syncPreview();
     if(previewVisible&&matchMedia('(max-width: 1000px)').matches)$('#preview-pane').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
-  };
-
-  // Smart Paste
-  $('#btn-smart-paste').onclick=()=>{
-    const d=document.createElement('dialog');
-    d.className='desk-dialog smart-paste-dialog';
-    d.setAttribute('aria-label','Вставка из нейросети');
-    d.innerHTML=`<header><h2>✨ Вставка ответа нейросети</h2><button type="button" class="icon-btn" data-close aria-label="Закрыть">✕</button></header><div class="desk-dialog-body"><p class="muted">Вставьте весь ответ Claude или ChatGPT. Система автоматически разберёт тему занятия, текст лекции и домашнее задание.</p><textarea id="smart-paste-input" rows="12" placeholder="Вставьте скопированный ответ нейросети сюда…"></textarea><div class="desk-dialog-actions"><button type="button" class="btn ghost" data-close>Отмена</button><button type="button" class="btn primary" id="btn-apply-smart-paste">Разобрать и вставить</button></div></div>`;
-    document.body.append(d);
-    const textarea=d.querySelector('#smart-paste-input');
-    textarea.focus();
-    d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());
-    d.addEventListener('close',()=>d.remove(),{once:true});
-    d.querySelector('#btn-apply-smart-paste').onclick=()=>{
-      const raw=textarea.value.trim();
-      if(!raw){toast('Вставьте текст для разбора');return;}
-      let text=raw,extractedTitle='',extractedAssignment='',extractedSummary='';
-      const taskBlock=text.match(/:::task\s*([\s\S]*?):::/i);
-      if(taskBlock){
-        extractedAssignment=taskBlock[1].trim();
-        text=text.replace(/:::task\s*[\s\S]*?:::/i,'').trim();
-      }else{
-        const taskHeading=text.match(/(?:^|\n)#{1,3}\s*(?:Задание|Домашнее задание|Д\/З|Что сделать к следующей паре)[^\n]*\n([\s\S]*?)(?=(?:\n#{1,3}\s)|$)/i);
-        if(taskHeading){
-          extractedAssignment=taskHeading[1].trim();
-          text=text.replace(taskHeading[0],'').trim();
-        }
-      }
-      const titleMatch=text.match(/^(?:#\s*|Тема:\s*)([^\n]+)/i);
-      if(titleMatch){
-        extractedTitle=titleMatch[1].trim();
-        text=text.replace(/^(?:#\s*|Тема:\s*)[^\n]+\n*/i,'').trim();
-      }
-      const summaryMatch=text.match(/^:::(?:summary|note)\s*([\s\S]*?):::/i);
-      if(summaryMatch){
-        extractedSummary=summaryMatch[1].trim();
-        text=text.replace(/^:::(?:summary|note)\s*[\s\S]*?:::\n*/i,'').trim();
-      }
-      if(extractedTitle&&(!f.elements.title.value||f.elements.title.value.startsWith('Лекция'))){
-        f.elements.title.value=extractedTitle;
-      }
-      if(extractedAssignment)texts.assignment_text=extractedAssignment;
-      if(extractedSummary&&!f.elements.summary.value)f.elements.summary.value=extractedSummary;
-      texts.lecture_text=text;
-      source.value=texts[textMode]||'';
-      updateTabDots();
-      preview();
-      changed();
-      d.close();
-      toast('Текст'+(extractedAssignment?' и задание':'')+' успешно вставлены!');
-    };
-    d.showModal();
   };
 
   $('#btn-copy-task-prompt')?.addEventListener('click',()=>{
