@@ -29,3 +29,6 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,t
 #compose-status:empty{display:none}
 #compose-status:not(:empty){padding:7px 2px 0}
 @media(max-width:600px){.compose-row{gap:7px}.compose-row .attach,.compose-row #send{width:46px;height:46px;flex-basis:46px}.compose-row textarea{min-height:46px;line-height:24px;padding:10px 11px}}
+
+/* Keep the chat heading compact and leave more space for messages. */
+.chat-main:has(#chat:not([hidden])){padding-top:10px}.chat-history{display:flex;justify-content:center}.chat-history button{min-height:32px;padding:6px 12px;background:transparent;border:0;border-radius:8px;color:#aaa;font-size:12px;cursor:pointer}#messages{padding-top:8px}.empty{padding:28px 12px;color:#aaa;font-size:14px}@media(max-width:600px){.chat-main:has(#chat:not([hidden])){padding-top:8px}.chat-top{height:56px}.empty{padding:25px 8px}}
