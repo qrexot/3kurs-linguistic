@@ -443,6 +443,7 @@
 
  try{
   await DB.ensureVisitor();
+  await NameGate.ensure();
   profile=await DB.profile();
   if(profile.blocked){lock();return}
   try{await track()}catch(e){if(/blocked|access_denied/.test(e.message)){lock();return}toast('Связь со статистикой временно недоступна.')}
