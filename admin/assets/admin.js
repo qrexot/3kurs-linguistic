@@ -595,6 +595,7 @@ async function editor(){
 
  async function visitors(){await VisitorAdmin.start()}
 
+ const formatVisitTime=value=>{const s=Math.max(0,Math.floor(Number(value)||0)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return (h?h+' ч ':'')+(h||m?m+' мин ':'')+sec+' с'};
  async function stats(){
   $('#main').innerHTML=`<div class="page-head spread">
     <div>
@@ -612,7 +613,7 @@ async function editor(){
   </div>
   <div id="stats-content"></div>
   <div class="stats-footer-panel">
-    <p class="admin-notice">Активное время приблизительное и считается с момента обновления учёта. IP и геопозиция получены от внешних сервисов и могут указывать на VPN или сеть провайдера.</p>
+    <p class="admin-notice">Время считается, пока вкладка видна, и отображается с точностью до секунды. При потере связи или закрытии браузера часть времени может не сохраниться; одновременно открытые вкладки могут суммироваться. IP и регион могут относиться к VPN или сети провайдера.</p>
     <div class="admin-actions">
       <button class="btn ghost btn-sm" id="export-stats">Скачать JSON</button>
       <button class="btn ghost btn-sm text-danger" id="clear-stats">Очистить историю старше 90 дней</button>
@@ -621,7 +622,7 @@ async function editor(){
 
   let data,requestId=0;
   const load=async()=>{
-    const run=++requestId,days=Number($('#stats-range').value),[r,extra]=await Promise.all([DB.rpc('admin_stats',{p_days:days}),DB.rpc('admin_analytics_v2',{p_days:days})]);
+    const run=++requestId,days=Number($('#stats-range').value),[r,extra,presence]=await Promise.all([DB.rpc('admin_stats',{p_days:days}),DB.rpc('admin_analytics_v2',{p_days:days}),DB.rpc('admin_presence_overview',{p_days:days})]);
     if(run!==requestId)return;
     data=r;
     const max=Math.max(1,...(data.popular||[]).map(p=>Number(p.views)));
@@ -640,11 +641,17 @@ async function editor(){
           <strong class="stats-metric-val">${Number(data.views||0).toLocaleString('ru-RU')}</strong>
         </div>
         <div class="stats-metric-card">
-          <span class="stats-metric-label">Активных минут</span>
-          <strong class="stats-metric-val">${Math.floor((data.seconds||0)/60).toLocaleString('ru-RU')}</strong>
+          <span class="stats-metric-label">Время в видимых вкладках</span>
+          <strong class="stats-metric-val">${formatVisitTime(data.seconds)}</strong>
         </div>
       </div>
 
+      <div class="stats-grid">
+        <section class="panel stats-section"><header><h2>Сейчас на сайте</h2></header><p><strong>${Number(presence.online||0)}</strong> видимых сессий за последние 35 секунд</p><p class="muted small">Количество приблизительное: вкладка может закрыться без последнего сигнала.</p></section>
+        <section class="panel stats-section"><header><h2>Время по дням</h2></header><div class="timeline-list">${(presence.daily_seconds||[]).map(d=>`<div class="timeline-row"><span>${esc(d.date_key)}</span><strong>${formatVisitTime(d.seconds)}</strong></div>`).join('')||'<p class="muted">Нет данных.</p>'}</div></section>
+        <section class="panel stats-section"><header><h2>Браузеры</h2></header><p class="muted small">По сохранённым техническим снимкам</p><div class="timeline-list">${(presence.browsers||[]).map(x=>`<div class="timeline-row"><span>${esc(x.name)}</span><strong>${Number(x.qty)}</strong></div>`).join('')||'<p class="muted">Нет данных.</p>'}</div></section>
+        <section class="panel stats-section"><header><h2>Операционные системы</h2></header><p class="muted small">По сохранённым техническим снимкам</p><div class="timeline-list">${(presence.systems||[]).map(x=>`<div class="timeline-row"><span>${esc(x.name)}</span><strong>${Number(x.qty)}</strong></div>`).join('')||'<p class="muted">Нет данных.</p>'}</div></section>
+      </div>
       <section class="panel stats-timeline"><h2>Активность по дням</h2><p class="muted small">Посетители и открытия лекций по московскому времени</p><div class="timeline-list">${(extra.daily||[]).slice(-14).reverse().map(d=>`<div class="timeline-row"><strong>${esc(d.date_key)}</strong><span>${Number(d.visitors)} посет.</span><span>${Number(d.views)} открытий</span></div>`).join('')||'<p class="muted">За этот период данных пока нет.</p>'}</div></section><section class="panel stats-modes"><h2>Что открывают</h2><div class="mode-list">${(extra.modes||[]).map(m=>`<div class="timeline-row"><span>${esc(({lecture:'Лекции',full:'Транскрипции',assignment:'Задания',extra:'Доп. материалы'})[m.mode]||m.mode)}</span><strong>${Number(m.views)}</strong></div>`).join('')||'<p class="muted">Нет данных.</p>'}</div></section>
       <div class="stats-grid">
         <section class="panel stats-section">

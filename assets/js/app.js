@@ -295,7 +295,7 @@
  }
  function renderAbout(info){
   document.title=info.title+' — материалы занятий';
-  $('#main').innerHTML=`<div class="about-layout"><a class="back-link" href="index.html">${icon('back')} К материалам</a><header class="about-heading"><span class="eyebrow">От автора</span><h1>${esc(info.title)}</h1></header><article class="prose about-copy">${Markdown.render(info.body)}</article><p class="analytics-disclosure">Сайт сохраняет сведения о посещениях: открытые страницы и материалы, примерное активное время и технические данные браузера и устройства. Для определения примерного региона используется IP-адрес; данные о сети могут быть неточны и обрабатываются внешними сервисами. Статистика доступна владельцу сайта.</p><div class="about-signature">made by <strong>Leonard</strong></div></div>`;
+  $('#main').innerHTML=`<div class="about-layout"><a class="back-link" href="index.html">${icon('back')} К материалам</a><header class="about-heading"><span class="eyebrow">От автора</span><h1>${esc(info.title)}</h1></header><article class="prose about-copy">${Markdown.render(info.body)}</article><p class="analytics-disclosure">Сайт сохраняет сведения о посещениях: открытые страницы и материалы, примерное время с открытой видимой вкладкой и технические данные браузера и устройства. Для определения примерного региона используется IP-адрес; данные о сети могут быть неточны и обрабатываются внешними сервисами. Сведения о просмотренных материалах и сети доступны владельцу сайта. Время является оценкой и может отличаться при потере связи или использовании нескольких вкладок.</p><div class="about-signature">made by <strong>Leonard</strong></div></div>`;
   UI.ready();
  }
 
@@ -414,21 +414,15 @@
   deviceId=result.device_id;
   fetchGeo().then(async g=>{if(locked||!g.ip)return;currentIp=g.ip;await DB.rpc('update_device_network',{p_device_id:deviceId,p_ip:g.ip,p_country:g.country,p_country_code:g.countryCode,p_city:g.city,p_isp:g.isp})}).catch(()=>{});
 
-  // Heartbeat каждые 20 сек
-  tracking=setInterval(async()=>{
-   if(!deviceId||locked||!accessReady)return;
-   const active=!document.hidden&&Date.now()-activity<90000;
-   if(!active)return;
-   try{await DB.rpc('device_heartbeat',{p_device_id:deviceId,p_active:active,p_ip:currentIp})}
-   catch(e){if(/blocked|access_denied/.test(e.message))lock()}
-  },20000);
+  // Count time while a page is visible; the database timestamps each transition.
+  const presenceId=crypto.randomUUID();
+  let presenceQueue=Promise.resolve();
+  const tick=visible=>{if(!deviceId||locked)return Promise.resolve();presenceQueue=presenceQueue.catch(()=>{}).then(()=>DB.rpc('device_presence_tick',{p_device_id:deviceId,p_session_id:presenceId,p_visible:visible}));return presenceQueue};
+  await tick(!document.hidden);
+  tracking=setInterval(()=>{if(deviceId&&!locked&&!document.hidden)tick(true).catch(()=>{})},15000);
+  document.addEventListener('visibilitychange',()=>{tick(!document.hidden).catch(()=>{})});
+  window.addEventListener('pagehide',()=>{if(!deviceId||locked)return;DB.request('/rest/v1/rpc/device_presence_tick',{method:'POST',keepalive:true,body:JSON.stringify({p_device_id:deviceId,p_session_id:presenceId,p_visible:false})}).catch(()=>{})});
 
-  ['pointerdown','keydown','scroll','touchstart'].forEach(ev=>window.addEventListener(ev,()=>activity=Date.now(),{passive:true}));
-  document.addEventListener('visibilitychange',()=>{
-   if(document.hidden)hiddenAt=Date.now();
-   else{activity=Date.now();if(hiddenAt)hiddenAt=0}
-   if(deviceId&&accessReady)DB.rpc('device_heartbeat',{p_device_id:deviceId,p_active:false,p_ip:currentIp}).catch(()=>{})
-  });
  }
 
  window.addEventListener('site-paused',()=>{locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null});
