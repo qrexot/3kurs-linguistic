@@ -23,11 +23,11 @@
   const plural=(n,o,f,m)=>{const mod10=n%10,mod100=n%100;if(mod10===1&&mod100!==11)return o;if(mod10>=2&&mod10<=4&&(mod100<10||mod100>=20))return f;return m};
   $('#main').innerHTML=`<div class="page-head spread">
     <div>
-      <h1>Недели и предметы</h1>
-      <p class="muted">Структура семестра, учебные недели и дисциплины</p>
+      <h1>Предметы</h1>
+      <p class="muted">Учебные дисциплины и материалы занятий</p>
     </div>
   </div>
-  <div class="structure-grid">
+  <div class="structure-grid structure-subjects-only">
     <section class="panel structure-panel">
       <div class="structure-panel-head">
         <div>
@@ -50,46 +50,11 @@
       <div id="subjects-list" class="structure-items-list"></div>
     </section>
 
-    <section class="panel structure-panel">
-      <div class="structure-panel-head">
-        <div>
-          <h2>Учебные недели</h2>
-          <p class="muted small">Даты и периоды занятий</p>
-        </div>
-        <span class="structure-badge-pill" id="weeks-badge">0</span>
-      </div>
-      <form class="structure-form stack" id="week-form">
-        <input type="hidden" name="id">
-        <label class="form-field">
-          <span>Название недели</span>
-          <input name="title" maxlength="100" required placeholder="Например, Неделя 1" autocomplete="off">
-        </label>
-        <div class="form-grid">
-          <label class="form-field">
-            <span>Начало недели</span>
-            <input type="date" name="starts_on" required>
-          </label>
-          <label class="form-field">
-            <span>Конец недели</span>
-            <input type="date" name="ends_on" required>
-          </label>
-        </div>
-        <label class="form-field">
-          <span>Порядковый номер</span>
-          <input type="number" name="sort_order" value="${weeks.length+1}" min="0" max="10000" required>
-        </label>
-        <div class="structure-form-actions">
-          <button class="btn primary" type="submit" id="week-btn-save">${icon('plus')} <span>Добавить неделю</span></button>
-          <button class="btn ghost" type="button" id="week-reset" hidden>Отмена</button>
-        </div>
-      </form>
-      <div id="weeks-list" class="structure-items-list"></div>
-    </section>
+
   </div>`;
 
   const draw=()=>{
     $('#subjects-badge').textContent=subjects.length;
-    $('#weeks-badge').textContent=weeks.length;
 
     $('#subjects-list').innerHTML=subjects.map(s=>{
       const cnt=lectures.filter(l=>!l.deleted_at&&l.subject_id===s.id).length;
@@ -105,27 +70,6 @@
       </div>`;
     }).join('')||'<p class="muted small">Добавьте первый предмет выше.</p>';
 
-    $('#weeks-list').innerHTML=weeks.map(w=>{
-      const cnt=lectures.filter(l=>!l.deleted_at&&l.week_id===w.id).length;
-      return `<div class="structure-item" id="week-item-${w.id}">
-        <div class="structure-item-info">
-          <div class="structure-item-title-row">
-            <strong class="structure-item-title">${esc(w.title)}</strong>
-            <span class="structure-sort-pill">#${w.sort_order??'—'}</span>
-          </div>
-          <div class="structure-item-meta">
-            <span>${date(w.starts_on)} — ${date(w.ends_on)}</span>
-            <span class="dot-sep">·</span>
-            <span>${cnt} ${plural(cnt,'материал','материала','материалов')}</span>
-          </div>
-        </div>
-        <div class="structure-item-actions">
-          <button class="btn ghost btn-sm" data-edit-week="${w.id}" type="button" aria-label="Изменить ${esc(w.title)}">${icon('settings')} <span>Изменить</span></button>
-          <button class="btn ghost btn-sm btn-icon-only text-danger" data-del-week="${w.id}" type="button" aria-label="Удалить ${esc(w.title)}">${icon('close')}</button>
-        </div>
-      </div>`;
-    }).join('')||'<p class="muted small">Добавьте первую неделю выше.</p>';
-
     document.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{
       const s=subjects.find(x=>x.id===b.dataset.editSub),f=$('#subject-form');
       f.elements.id.value=s.id;
@@ -137,21 +81,11 @@
       f.elements.name.focus();
     });
 
-    document.querySelectorAll('[data-edit-week]').forEach(b=>b.onclick=()=>{
-      const w=weeks.find(x=>x.id===b.dataset.editWeek),f=$('#week-form');
-      ['id','title','starts_on','ends_on','sort_order'].forEach(k=>f.elements[k].value=w[k]);
-      $('#week-reset').hidden=false;
-      $('#week-btn-save').innerHTML=icon('check')+' <span>Сохранить</span>';
-      document.querySelectorAll('.structure-item.is-editing').forEach(el=>el.classList.remove('is-editing'));
-      $('#week-item-'+w.id)?.classList.add('is-editing');
-      f.elements.title.focus();
-    });
-
-    for(const kind of ['sub','week'])document.querySelectorAll(`[data-del-${kind}]`).forEach(b=>b.onclick=guard(async()=>{
+    for(const kind of ['sub'])document.querySelectorAll(`[data-del-${kind}]`).forEach(b=>b.onclick=guard(async()=>{
       const id=b.getAttribute('data-del-'+kind);
-      if(!await confirmAction('Удалить '+(kind==='sub'?'предмет?':'неделю?'),'Удалить можно только пустой раздел. Если в нём есть занятия, сначала перенесите их.'))return;
+      if(!await confirmAction('Удалить '+'предмет?','Удалить можно только пустой раздел. Если в нём есть занятия, сначала перенесите их.'))return;
       try{
-        await DB.remove(kind==='sub'?'subjects':'weeks',id);
+        await DB.remove('subjects',id);
         await base();
         draw();
         toast('Удалено');
@@ -162,21 +96,20 @@
     }));
   };
 
-  for(const kind of ['subject','week']){
+  for(const kind of ['subject']){
     $('#'+kind+'-reset').onclick=()=>{
       const f=$('#'+kind+'-form');
       f.reset();
       f.elements.id.value='';
       $('#'+kind+'-reset').hidden=true;
-      $('#'+kind+'-btn-save').innerHTML=icon('plus')+' <span>Добавить '+(kind==='subject'?'предмет':'неделю')+'</span>';
+      $('#'+kind+'-btn-save').innerHTML=icon('plus')+' <span>Добавить '+'предмет'+'</span>';
       document.querySelectorAll('.structure-item.is-editing').forEach(el=>el.classList.remove('is-editing'));
     };
     $('#'+kind+'-form').onsubmit=guard(async e=>{
       e.preventDefault();
-      const f=e.target,table=kind==='subject'?'subjects':'weeks',id=f.elements.id.value;
-      const payload=kind==='subject'?{name:f.elements.name.value.trim()}:{title:f.elements.title.value.trim(),starts_on:f.elements.starts_on.value,ends_on:f.elements.ends_on.value,sort_order:Number(f.elements.sort_order.value)};
+      const f=e.target,table='subjects',id=f.elements.id.value;
+      const payload={name:f.elements.name.value.trim()};
       if(!(payload.name||payload.title))throw new Error('Введите название.');
-      if(kind==='week'&&payload.ends_on<payload.starts_on)throw new Error('Конец недели не может быть раньше начала.');
       const b=f.querySelector('[type=submit]');
       busy(b,true);
       try{
@@ -185,7 +118,7 @@
         f.reset();
         f.elements.id.value='';
         $('#'+kind+'-reset').hidden=true;
-        $('#'+kind+'-btn-save').innerHTML=icon('plus')+' <span>Добавить '+(kind==='subject'?'предмет':'неделю')+'</span>';
+        $('#'+kind+'-btn-save').innerHTML=icon('plus')+' <span>Добавить '+'предмет'+'</span>';
         document.querySelectorAll('.structure-item.is-editing').forEach(el=>el.classList.remove('is-editing'));
         await base();
         draw();
@@ -205,7 +138,7 @@ async function editor(){
   let id=params.get('id'),item=id?(await DB.select('lectures','select=*&id=eq.'+encodeURIComponent(id)))[0]:null;
   if(item?.deleted_at){$('#main').innerHTML=empty('Материал в корзине','Сначала восстановите его как черновик.','<a class="btn primary" href="trash.html">Открыть корзину</a>');return}
   if(id&&!item){$('#main').innerHTML=empty('Лекция не найдена');return}
-  if(!subjects.length||!weeks.length){$('#main').innerHTML=empty('Добавьте структуру','Для занятия нужен хотя бы один предмет и одна неделя.','<a href="structure.html" class="btn primary">Добавить предметы и недели</a>');return}
+  if(!subjects.length){$('#main').innerHTML=empty('Добавьте структуру','Для занятия нужен хотя бы один предмет.','<a href="structure.html" class="btn primary">Добавить предмет</a>');return}
 
   const findWeekForDate=d=>weeks.find(w=>d>=w.starts_on&&d<=w.ends_on)?.id||weeks[0]?.id||'';
   const l=item||{title:'',subject_id:subjects[0].id,week_id:findWeekForDate(AdminSchedule.today()),lecture_date:AdminSchedule.today(),summary:'',lecture_text:'',full_text:'',assignment_text:'',extra_text:'',extra_images:[],published:false};

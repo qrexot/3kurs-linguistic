@@ -1,7 +1,7 @@
 'use strict';
 window.AdminStudio=(()=>{
  const $=s=>document.querySelector(s),e=App.esc;
- const pages=[['overview.html','Обзор','grid'],['index.html','Материалы','book'],['schedule.html','Расписание','clock'],['visitors.html','Посетители','users'],['structure.html','Предметы и недели','grid'],['stats.html','Статистика','chart'],['about.html','Настройки сайта','settings'],['help.html','Оформление текста','book'],['trash.html','Корзина','close']];
+ const pages=[['overview.html','Обзор','grid'],['index.html','Материалы','book'],['schedule.html','Расписание','clock'],['visitors.html','Посетители','users'],['structure.html','Предметы','grid'],['stats.html','Статистика','chart'],['about.html','Настройки сайта','settings'],['help.html','Оформление текста','book'],['trash.html','Корзина','close']];
  function make(tag,cls,html){const el=document.createElement(tag);el.className=cls;el.innerHTML=html;return el}
  function fold(nodes,title,cls=''){nodes=nodes.filter(Boolean);if(!nodes.length)return null;const d=make('details','quiet-fold '+cls,'<summary>'+e(title)+'</summary><div class="quiet-fold-body"></div>');nodes[0].before(d);nodes.forEach(n=>d.lastElementChild.append(n));return d}
  function shell(){if(document.body.classList.contains('quiet-admin'))return;document.body.classList.add('quiet-admin');const nav=$('.side-nav');if(nav){nav.replaceChildren();pages.forEach(([href,title,ic],i)=>{if(i===4)nav.append(make('div','quiet-nav-divider',''));const a=make('a','',App.icon(ic)+'<span>'+title+'</span>');a.href=href;if(location.pathname.endsWith('/'+href)){a.classList.add('active');a.setAttribute('aria-current','page')}nav.append(a)});$('.side-mark span').textContent='Управление';$('.nav-label')?.remove()}

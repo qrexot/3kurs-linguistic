@@ -995,18 +995,18 @@ body[data-page="reader"] .content{max-width:1210px;padding-top:clamp(22px,3.2vw,
 .contents-head .icon-btn{width:34px;min-height:34px;border-color:var(--line);border-radius:50%}
 .contents-dialog nav{display:flex;flex-direction:column;padding:10px}
 .contents-link{display:flex;align-items:baseline;gap:12px;width:100%;padding:10px 10px;border-radius:8px;text-align:left;font-size:13px;line-height:1.45;color:var(--ink-2);background:none;transition:background-color .15s}
-.contents-link span{font-size:9px;color:var(--muted-2);font-variant-numeric:tabular-nums}
+.contents-link .contents-label{min-width:0;font:inherit;color:inherit;overflow-wrap:anywhere}
 .contents-link:hover{background:#303030;color:var(--accent)}
 
 /* Reading Focus Mode */
 body.reading-focus{background:var(--paper)}
 body.reading-focus .sidebar,body.reading-focus .topbar,body.reading-focus .mobile-nav,body.reading-focus footer,body.reading-focus .toc,body.reading-focus .related-lectures,body.reading-focus .back-link{display:none!important}
 body.reading-focus .shell{margin-left:0}
-body.reading-focus .content{max-width:860px;padding:64px clamp(20px,4vw,44px) 90px}
+body.reading-focus .content{max-width:860px;padding:24px clamp(20px,4vw,44px) 90px}
 body.reading-focus .read-layout{display:block}
 body.reading-focus .reader-head h1{font-size:clamp(36px,5vw,54px)}
 body.reading-focus .owner-entry{display:none!important}
-body.reading-focus .reading-actions{position:fixed;top:16px;right:16px;z-index:95;padding:5px 6px 5px 8px;border:1px solid var(--line);border-radius:var(--radius-full);background:rgba(34,34,34,.94);box-shadow:var(--shadow-md);backdrop-filter:blur(12px)}
+body.reading-focus .reading-actions{position:sticky;top:8px;z-index:30;margin:16px 0 8px;padding:8px;border:1px solid var(--line);border-radius:14px;background:rgba(34,34,34,.97);box-shadow:var(--shadow-sm);backdrop-filter:blur(12px)}
 body.reading-focus .read-percent{padding:0 8px 0 4px;font-size:15px}
 
 /* ——— ABOUT PAGE —————————————————————————————————————————— */

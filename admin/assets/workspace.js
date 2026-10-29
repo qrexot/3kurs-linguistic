@@ -8,7 +8,6 @@ window.AdminDesk=(()=>{
  async function materials(ctx){
   let data=ctx.lectures,index=0,shown=[],filtered=[],working=false;const selected=new Set(),trash=ctx.trash;
   const subject=id=>ctx.subjects.find(x=>x.id===id)?.name||'Без предмета';
-  const week=id=>ctx.weeks.find(x=>x.id===id)?.title||'Без недели';
 
   $('#main').innerHTML=`<div class="page-head spread">
     <div>
@@ -151,7 +150,7 @@ window.AdminDesk=(()=>{
       if(status==='published'&&!l.published||status==='draft'&&l.published)return false;
       if(status==='assignment'&&!l.assignment_text?.trim()||status==='no-assignment'&&l.assignment_text?.trim())return false;
       if(status==='issues'&&!AdminKit.issues(l,ctx.subjects,ctx.weeks,duplicateIds).length)return false;
-      const text=normalize([l.title,subject(l.subject_id),week(l.week_id),l.summary,l.lecture_text,l.full_text,l.assignment_text].join(' '));
+      const text=normalize([l.title,subject(l.subject_id),l.summary,l.lecture_text,l.full_text,l.assignment_text].join(' '));
       return words.every(w=>text.includes(w));
     });
 
