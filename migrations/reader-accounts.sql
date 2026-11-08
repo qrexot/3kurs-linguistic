@@ -107,4 +107,17 @@ create policy reader_account_required on public.subjects as restrictive for sele
 create policy reader_account_required on public.weeks as restrictive for select to public using ((select lecture_private.reader_authorized()));
 create policy reader_account_required on public.site_about as restrictive for select to public using ((select lecture_private.reader_authorized()));
 create policy reader_account_required on public.lecture_revisions as restrictive for select to public using ((select lecture_private.reader_authorized()));
+CREATE OR REPLACE FUNCTION public.my_notifications()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare result jsonb; begin
+ if auth.uid() is null then raise exception 'access_denied'; end if;
+ if not lecture_private.session_allowed() then return jsonb_build_object('unread',0,'items','[]'::jsonb);end if;
+ select jsonb_build_object('unread',(select count(*) from public.user_notifications n where n.user_id=auth.uid() and n.read_at is null),'items',coalesce((select jsonb_agg(to_jsonb(x) order by x.id desc) from (select id,kind,title,body,target,created_at,read_at from public.user_notifications where user_id=auth.uid() order by id desc limit 50) x),'[]'::jsonb)) into result;
+ return result;
+end $function$
+
 commit;
