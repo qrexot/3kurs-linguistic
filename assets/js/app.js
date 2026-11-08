@@ -15,7 +15,7 @@
   }catch{return {page:'library',params:new URLSearchParams()}}
  }
  const initResolved=resolvePage();
- let page=initResolved.page,params=initResolved.params;
+ let page=initResolved.page,params=initResolved.params;let routePath=location.pathname+location.search;
  let subjects=[],weeks=[],lectures=[],profile=null,deviceId=null,currentIp='',selected=params.get('subject')||'',search='',current=null,mode='lecture',poll=null,tracking=null,activity=Date.now(),hiddenAt=0,locked=false,accessReady=false;
  const CATALOG_CACHE='lecture_catalog_v3';
  function getCachedCatalog(){try{const r=sessionStorage.getItem(CATALOG_CACHE);if(!r)return null;const d=JSON.parse(r);if(d&&Array.isArray(d.lectures)&&d.lectures.length&&Date.now()-d.ts<600000)return d}catch{}return null}
@@ -60,7 +60,7 @@
     if(replace)history.replaceState({url:target.href},'',target.href);
     else history.pushState({url:target.href},'',target.href);
    }
-   page=resolved.page;params=resolved.params;selected=params.get('subject')||'';
+   page=resolved.page;params=resolved.params;routePath=location.pathname+location.search;selected=params.get('subject')||'';
    document.body.dataset.page=page;updateChrome(page);if(deviceId)DB.rpc('record_navigation',{p_device_id:deviceId,p_page:page}).catch(()=>{});if(page!=='reader')document.body.classList.remove('reading-focus');
    if(main&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
     main.classList.add('is-transitioning');
@@ -81,7 +81,7 @@
    isNavigating=false;
   }
  }
- function fail(e){if(window.VisitorAccess&&/visitor_access_status|submit_access_request/.test(e.message))e=new Error(VisitorAccess.error(e));$('#main').innerHTML=empty(e.message==='blocked'?'Доступ ограничен':'Не удалось открыть материалы',errorText(e),`<button class="btn primary" id="retry">Попробовать снова</button>`);$('#retry')?.addEventListener('click',()=>location.reload())}
+ function fail(e){document.documentElement.classList.remove('access-boot');if(window.VisitorAccess&&/visitor_access_status|submit_access_request/.test(e.message))e=new Error(VisitorAccess.error(e));$('#main').innerHTML=empty(e.message==='blocked'?'Доступ ограничен':'Не удалось открыть материалы',errorText(e),`<button class="btn primary" id="retry">Попробовать снова</button>`);$('#retry')?.addEventListener('click',()=>location.reload())}
  function lock(){try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null;$('#main').innerHTML=empty('Доступ ограничен','Владелец ограничил доступ для этого посетителя.');document.title='Доступ ограничен'}
  function meta(l){const values=[l.lecture_date?new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric'}).format(new Date(l.lecture_date+'T12:00:00')):'Без даты',l.pair_number?`${l.pair_number}-я пара`:'',l.starts_at?l.starts_at.slice(0,5):''].filter(Boolean);return `<div class="lecture-meta" aria-label="Дата и время занятия">${values.map(value=>`<span>${esc(value)}</span>`).join('<span class="sep" aria-hidden="true">·</span>')}</div>`}
  const normalizeSearch=t=>String(t||'').toLocaleLowerCase('ru').replace(/ё/g,'е');
@@ -452,7 +452,8 @@
   const [newSubs,newWks,newLecs]=loaded;
   newLecs.sort((a,b)=>(b.lecture_date+(b.starts_at||'')).localeCompare(a.lecture_date+(a.starts_at||'')));
   subjects=newSubs;weeks=newWks;lectures=newLecs;
-  setCachedCatalog(subjects,weeks,lectures);
+  // Do not persist lecture text in browser storage.
+
 
   poll=setInterval(async()=>{
    if(document.hidden||locked)return;
@@ -464,6 +465,7 @@
    else if(page==='reader')await reader();
    else if(page==='privacy')await privacy();
    else library();
+   document.body.classList.remove('awaiting-access');document.documentElement.classList.remove('access-boot');
    UI.ready();
   }
  }catch(e){if(!cached)fail(e)}
@@ -502,6 +504,7 @@
  });
 
  window.addEventListener('popstate',()=>{
+  if(location.pathname+location.search===routePath){UI.followHash();return}
   navigateTo(location.href,{pop:true});
  });
 

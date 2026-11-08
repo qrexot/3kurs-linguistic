@@ -2,6 +2,7 @@
 window.DB = (()=>{
  const admin=document.body.dataset.admin==='true', key=admin?'lecture-admin-session':'lecture-visitor-session';
  let session=App.storage.get(key),refreshPromise=null;
+ const readerProof=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');
  let readerDevice=null;
  function browserKey(){if(admin)return null;if(readerDevice)return readerDevice;const name='lecture-reader-device-v1';let value=localStorage.getItem(name);if(!/^[a-f0-9]{64}$/.test(value||'')){value=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');localStorage.setItem(name,value);if(localStorage.getItem(name)!==value)throw new Error('Разрешите сохранение данных сайта.')}readerDevice=value;return value}
 
@@ -9,7 +10,7 @@ window.DB = (()=>{
  async function request(path,options={},auth=true,retry=true){
   if(auth&&session&&session.expires_at<Date.now()/1000+45)await refresh();
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),options.body instanceof Blob?180000:18000);
-  try{const r=await fetch(CONFIG.url+path,{...options,signal:abort.signal,headers:{apikey:CONFIG.key,'Content-Type':'application/json',...(!admin?{'x-client-info':'reader/'+browserKey()}:{}),...(auth?{Authorization:'Bearer '+(session?.access_token||CONFIG.key)}:{}),...options.headers}});
+  try{const r=await fetch(CONFIG.url+path,{...options,signal:abort.signal,headers:{apikey:CONFIG.key,'Content-Type':'application/json',...(!admin&&auth?{'x-client-info':'reader/'+browserKey()+'.'+readerProof}:{}),...(auth?{Authorization:'Bearer '+(session?.access_token||CONFIG.key)}:{}),...options.headers}});
    const raw=await r.text();let data;try{data=raw?JSON.parse(raw):null}catch{data=null}
    if(r.status===401&&auth&&session&&retry){await refresh();return request(path,options,auth,false)}
    if(!r.ok){const e=new Error(data?.msg||data?.message||data?.error_description||data?.error||`Ошибка сервера (${r.status})`);e.status=r.status;e.code=data?.code;throw e}return data;
@@ -34,7 +35,7 @@ window.DB = (()=>{
  }
  async function refresh(){if(refreshPromise)return refreshPromise;refreshPromise=exclusive(async()=>{const current=App.storage.get(key)||session;if(current&&current.access_token!==session?.access_token&&current.expires_at>Date.now()/1000+45){session=current;return}try{if(!current?.refresh_token)throw new Error('session_expired');save(await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:current.refresh_token})},false))}catch(e){if(e.status===400||e.status===401||e.message==='session_expired'){const newer=App.storage.get(key);if(newer?.refresh_token&&newer.refresh_token!==current?.refresh_token){session=newer;return}save(null);window.dispatchEvent(new Event('session-lost'))}throw e}}).finally(()=>refreshPromise=null);return refreshPromise}
  let visitorPromise=null;
- async function ensureVisitor(){if(visitorPromise)return visitorPromise;visitorPromise=(async()=>{await exclusive(async()=>{session=App.storage.get(key)||session;if(!session){try{const probe=key+'-probe';localStorage.setItem(probe,'1');if(localStorage.getItem(probe)!=='1')throw new Error();localStorage.removeItem(probe)}catch{throw new Error('Браузер не сохраняет данные сайта. Разрешите локальное хранилище и откройте сайт снова.')}save(await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({data:{source:'lecture-browser'}})},false));if(!App.storage.get(key)?.refresh_token)throw new Error('Не удалось сохранить сессию браузера. Разрешите хранение данных сайта.')}});if(!session)throw new Error('Анонимный доступ недоступен. Обратитесь к владельцу.');if(session.expires_at<Date.now()/1000+45)await refresh();return session})().finally(()=>visitorPromise=null);return visitorPromise}
+ async function ensureVisitor(){if(visitorPromise)return visitorPromise;visitorPromise=(async()=>{await exclusive(async()=>{session=App.storage.get(key)||session;if(!admin)browserKey();if(!session){try{const probe=key+'-probe';localStorage.setItem(probe,'1');if(localStorage.getItem(probe)!=='1')throw new Error();localStorage.removeItem(probe)}catch{throw new Error('Браузер не сохраняет данные сайта. Разрешите локальное хранилище и откройте сайт снова.')}save(await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({data:{source:'lecture-browser'}})},false));if(!App.storage.get(key)?.refresh_token)throw new Error('Не удалось сохранить сессию браузера. Разрешите хранение данных сайта.')}});if(!session)throw new Error('Анонимный доступ недоступен. Обратитесь к владельцу.');if(session.expires_at<Date.now()/1000+45)await refresh();return session})().finally(()=>visitorPromise=null);return visitorPromise}
  async function login(email,password){save(await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},false));return session}
  async function logout(){try{if(session)await request('/auth/v1/logout',{method:'POST'})}finally{save(null)}}
  function select(table,query=''){return request('/rest/v1/'+table+'?'+query)}

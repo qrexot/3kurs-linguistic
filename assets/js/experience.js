@@ -5,7 +5,7 @@ window.UI=(()=>{
  const get=(k,d={})=>{try{return JSON.parse(sessionStorage.getItem(k))||d}catch{return d}};
  const set=(k,v)=>{try{sessionStorage.setItem(k,JSON.stringify(v))}catch{}};
  const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
- let initialList=true,restoreFrame=0,readerId=null,readerMode=null,readingReady=false,readerTimer,progressFrame=0;
+ let initialList=true,restoreFrame=0,restoreInnerFrame=0,anchorFrame=0,readerId=null,readerMode=null,readingReady=false,readerTimer,progressFrame=0;
  let activeListKey=viewKey();
  const listState=()=>get(activeListKey);
  function beginList(){activeListKey=viewKey();initialList=true;return listState()}
@@ -36,15 +36,22 @@ window.UI=(()=>{
    document.body.classList.toggle('reading-focus',storage.get('lecture-focus',false)===true);syncFocus();
   }
   const headings=[...$('#reading-text').querySelectorAll('h2,h3')];$('#mobile-contents').innerHTML=headings.length?headings.map((h,i)=>`<button type="button" class="contents-link ${h.tagName==='H3'?'subheading':''}" data-heading="${esc(h.id)}"><span class="contents-label">${esc(h.textContent)}</span></button>`).join(''):'<p class="muted">В этой версии нет разделов.</p>';
-  $('#mobile-contents').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#contents-dialog').close();Markdown.reveal(document.getElementById(b.dataset.heading))?.scrollIntoView({behavior:reduced()?'instant':'smooth',block:'start'})});
+  $('#mobile-contents').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#contents-dialog').close();document.documentElement.classList.remove('contents-open');jumpToHeading(document.getElementById(b.dataset.heading))});
   const saved=readerState();if(first&&!['lecture','full','assignment','extra'].includes(new URLSearchParams(location.search).get('mode'))&&saved.mode&&saved.mode!==mode){const tab=$(`[data-mode="${['lecture','full','assignment','extra'].includes(saved.mode)?saved.mode:'lecture'}"]`);if(tab){tab.click();return}}
-  cancelAnimationFrame(restoreFrame);restoreFrame=requestAnimationFrame(()=>requestAnimationFrame(()=>{const y=Number(readerState()[readerMode]);if(Number.isFinite(y))window.scrollTo({top:y,behavior:'instant'});else if(!first)window.scrollTo({top:Math.max(0,$('.reader-controls').getBoundingClientRect().top+scrollY-12),behavior:'instant'});else window.scrollTo({top:0,behavior:'instant'});readingReady=true;progress()}));
+  cancelAnimationFrame(restoreFrame);cancelAnimationFrame(restoreInnerFrame);restoreFrame=requestAnimationFrame(()=>{restoreInnerFrame=requestAnimationFrame(()=>{const y=Number(readerState()[readerMode]);if(Number.isFinite(y))window.scrollTo({top:y,behavior:'instant'});else if(!first)window.scrollTo({top:Math.max(0,$('.reader-controls').getBoundingClientRect().top+scrollY-12),behavior:'instant'});else window.scrollTo({top:0,behavior:'instant'});readingReady=true;if(location.hash&&document.getElementById(location.hash.slice(1)))followHash();else progress()})});
  }
  function syncFocus(){const active=document.body.classList.contains('reading-focus'),b=$('#focus-reading');if(!b)return;b.setAttribute('aria-pressed',String(active));b.querySelector('span').textContent=active?'Обычный вид':'Режим чтения'}
  function progress(){const text=$('#reading-text'),label=$('#read-percent');if(!text||!label)return;const top=text.getBoundingClientRect().top+scrollY,bottom=top+text.offsetHeight;const p=Math.max(0,Math.min(100,Math.round((scrollY+innerHeight-top)/Math.max(1,bottom-top)*100)));label.textContent=p+'%';label.setAttribute('aria-label','Прочитано примерно '+p+'%');const headings=[...text.querySelectorAll('h2,h3')];let active=headings[0]?.id;for(const h of headings){if(h.getClientRects().length&&h.getBoundingClientRect().top<160)active=h.id}document.querySelectorAll('#toc-links a').forEach(a=>{const on=a.hash==='#'+active;a.classList.toggle('current-section',on);if(on)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')})}
  window.addEventListener('scroll',()=>{if(readerId){if(!progressFrame)progressFrame=requestAnimationFrame(()=>{progressFrame=0;progress()});clearTimeout(readerTimer);readerTimer=setTimeout(saveReader,180)}},{passive:true});
  window.addEventListener('pagehide',()=>{cancelAnimationFrame(restoreFrame);saveList();saveReader()});
- document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(a&&$('#search'))saveList();if(a&&a.getAttribute('href')?.startsWith('#')){const target=document.getElementById(a.getAttribute('href').slice(1));if(target)Markdown.reveal(target)}});
+ function jumpToHeading(target){
+  if(!target)return;cancelAnimationFrame(restoreFrame);cancelAnimationFrame(restoreInnerFrame);cancelAnimationFrame(anchorFrame);
+  Markdown.reveal(target);readingReady=true;
+  const url=new URL(location.href);url.hash=target.id;history.replaceState(history.state,'',url.href);
+  anchorFrame=requestAnimationFrame(()=>{if(!target.isConnected)return;target.scrollIntoView({behavior:reduced()?'instant':'smooth',block:'start'});target.setAttribute('tabindex','-1');target.focus({preventScroll:true});progress()});
+ }
+ function followHash(){let id;try{id=decodeURIComponent(location.hash.slice(1))}catch{return}jumpToHeading(document.getElementById(id))}
+ document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(a&&$('#search'))saveList();if(!a||e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;const href=a.getAttribute('href');if(href?.startsWith('#')){let id;try{id=decodeURIComponent(href.slice(1))}catch{return}const target=document.getElementById(id);if(target){e.preventDefault();jumpToHeading(target)}}});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){saveList();saveReader()}});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('reading-focus')&&!$('#contents-dialog')?.open){document.body.classList.remove('reading-focus');storage.set('lecture-focus',false);syncFocus()}});
  let searchAnimations=[];
@@ -56,5 +63,5 @@ window.UI=(()=>{
   searchAnimations.push(list.animate([{opacity:.65,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],{duration:220,easing:'cubic-bezier(.22,1,.36,1)'}));
 
  }
- return {searchState,searchResults,saveList,beginList,listState,restoreList,listRendered,announce,skeleton,ready,readerRendered,saveReader};
+ return {searchState,searchResults,saveList,beginList,listState,restoreList,listRendered,announce,skeleton,ready,readerRendered,saveReader,jumpToHeading,followHash};
 })();
