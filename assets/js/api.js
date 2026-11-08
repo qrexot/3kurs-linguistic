@@ -2,11 +2,14 @@
 window.DB = (()=>{
  const admin=document.body.dataset.admin==='true', key=admin?'lecture-admin-session':'lecture-visitor-session';
  let session=App.storage.get(key),refreshPromise=null;
+ let readerDevice=null;
+ function browserKey(){if(admin)return null;if(readerDevice)return readerDevice;const name='lecture-reader-device-v1';let value=localStorage.getItem(name);if(!/^[a-f0-9]{64}$/.test(value||'')){value=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');localStorage.setItem(name,value);if(localStorage.getItem(name)!==value)throw new Error('Разрешите сохранение данных сайта.')}readerDevice=value;return value}
+
  function save(s){session=s?.access_token?{...s,expires_at:s.expires_at||Math.floor(Date.now()/1000)+(s.expires_in||3600)}:null;if(session)App.storage.set(key,session);else App.storage.del(key)}
  async function request(path,options={},auth=true,retry=true){
   if(auth&&session&&session.expires_at<Date.now()/1000+45)await refresh();
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),options.body instanceof Blob?180000:18000);
-  try{const r=await fetch(CONFIG.url+path,{...options,signal:abort.signal,headers:{apikey:CONFIG.key,'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+(session?.access_token||CONFIG.key)}:{}),...options.headers}});
+  try{const r=await fetch(CONFIG.url+path,{...options,signal:abort.signal,headers:{apikey:CONFIG.key,'Content-Type':'application/json',...(!admin?{'x-client-info':'reader/'+browserKey()}:{}),...(auth?{Authorization:'Bearer '+(session?.access_token||CONFIG.key)}:{}),...options.headers}});
    const raw=await r.text();let data;try{data=raw?JSON.parse(raw):null}catch{data=null}
    if(r.status===401&&auth&&session&&retry){await refresh();return request(path,options,auth,false)}
    if(!r.ok){const e=new Error(data?.msg||data?.message||data?.error_description||data?.error||`Ошибка сервера (${r.status})`);e.status=r.status;e.code=data?.code;throw e}return data;

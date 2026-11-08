@@ -82,7 +82,7 @@
   }
  }
  function fail(e){if(window.VisitorAccess&&/visitor_access_status|submit_access_request/.test(e.message))e=new Error(VisitorAccess.error(e));$('#main').innerHTML=empty(e.message==='blocked'?'Доступ ограничен':'Не удалось открыть материалы',errorText(e),`<button class="btn primary" id="retry">Попробовать снова</button>`);$('#retry')?.addEventListener('click',()=>location.reload())}
- function lock(){locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null;$('#main').innerHTML=empty('Доступ ограничен','Владелец ограничил доступ для этого посетителя.');document.title='Доступ ограничен'}
+ function lock(){try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null;$('#main').innerHTML=empty('Доступ ограничен','Владелец ограничил доступ для этого посетителя.');document.title='Доступ ограничен'}
  function meta(l){const values=[l.lecture_date?new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric'}).format(new Date(l.lecture_date+'T12:00:00')):'Без даты',l.pair_number?`${l.pair_number}-я пара`:'',l.starts_at?l.starts_at.slice(0,5):''].filter(Boolean);return `<div class="lecture-meta" aria-label="Дата и время занятия">${values.map(value=>`<span>${esc(value)}</span>`).join('<span class="sep" aria-hidden="true">·</span>')}</div>`}
  const normalizeSearch=t=>String(t||'').toLocaleLowerCase('ru').replace(/ё/g,'е');
  function cleanText(t){return (t||'').replace(/:::[\w-]*|[#*`~>|_=-]/g,' ').replace(/\s+/g,' ')}
@@ -429,26 +429,18 @@
  SiteAvailability.start().catch(()=>{});
 
  shell();
- const cached=getCachedCatalog();
- if(cached){
-  subjects=cached.subjects||[];
-  weeks=cached.weeks||[];
-  lectures=cached.lectures||[];
-  if(page==='subjects')subjectPage();
-  else if(page==='reader')await reader();
-  else if(page==='privacy')await privacy();
-  else library();
-  UI.ready();
- }
+ // Content is never rendered from cache before server-side authorization.
+ let cached=null;
+ try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}
+ document.body.classList.add('awaiting-access');
 
  try{
   await DB.ensureVisitor();
   await NameGate.ensure();
+  await VisitorAccess.ensure();
   profile=await DB.profile();
   if(profile.blocked){lock();return}
   try{await track()}catch(e){if(/blocked|access_denied/.test(e.message)){lock();return}toast('Связь со статистикой временно недоступна.')}
-  if(locked)return;
-  // Access is automatic for non-blocked sessions.
   if(locked)return;
   accessReady=true;
 
@@ -464,7 +456,7 @@
 
   poll=setInterval(async()=>{
    if(document.hidden||locked)return;
-   try{const p=await DB.profile();if(p.blocked){locked=true;clearInterval(poll);clearInterval(tracking);location.reload()}}catch{}
+   try{const access=await VisitorAccess.status();if(!access?.allowed){try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}location.reload();return}const p=await DB.profile();if(p.blocked){locked=true;clearInterval(poll);clearInterval(tracking);location.reload()}}catch{lock()}
   },20000);
 
   if(!cached){
@@ -513,6 +505,6 @@
   navigateTo(location.href,{pop:true});
  });
 
- window.addEventListener('session-lost',()=>{locked=true;clearInterval(poll);clearInterval(tracking);$('#main').innerHTML=empty('Сессия завершена','Обновите страницу, чтобы снова открыть материалы.','<button class="btn" onclick="location.reload()">Обновить</button>')});
+ window.addEventListener('session-lost',()=>{try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');subjects=[];weeks=[];lectures=[];current=null;locked=true;clearInterval(poll);clearInterval(tracking);$('#main').innerHTML=empty('Сессия завершена','Обновите страницу, чтобы снова открыть материалы.','<button class="btn" onclick="location.reload()">Обновить</button>')});
  window.addEventListener('offline',()=>toast('Нет интернета. Новые материалы пока не загрузятся.'));
 })();

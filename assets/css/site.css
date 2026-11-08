@@ -1199,3 +1199,6 @@ body.site-paused{overflow:hidden}
   a{text-decoration:underline;color:#111}
   .related-lectures{display:none}
 }
+
+/* Personal reader login */
+.reader-password-field{display:flex;align-items:center;gap:8px;min-width:0}.reader-password-field input{width:100%;min-width:0;flex:1}.reader-reveal{border:1px solid var(--line);background:#292929;color:var(--ink);padding:12px;border-radius:10px;cursor:pointer;font-size:12px;min-height:48px}.reader-login-note{font-size:12px;line-height:1.7;color:var(--muted);margin:22px 0 0}.reader-login #reader-login-error{font-size:13px;line-height:1.6;color:var(--accent);margin:0;min-height:1em}.reader-login form{max-width:none}.reader-login .reader-password-field{letter-spacing:normal;text-transform:none}.awaiting-access .top-help,.awaiting-access .crumb{visibility:hidden}
