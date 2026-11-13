@@ -1,0 +1,81 @@
+/* Small control refinements. Existing theme tokens and page composition stay intact. */
+body .btn,
+body .icon-btn,
+body .filter-trigger {
+  gap: 8px;
+  line-height: 1.35;
+  transition: background-color .16s ease, border-color .16s ease,
+    color .16s ease, box-shadow .16s ease;
+  touch-action: manipulation;
+}
+body :is(.btn, .icon-btn, .filter-trigger) > .icon {
+  flex-shrink: 0;
+}
+body :is(.btn, .icon-btn):active {
+  transform: none;
+}
+body :is(.btn, .icon-btn, .filter-trigger):focus-visible,
+body.admin :is(summary, .menu-item, select, input, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+body :is(.btn, .icon-btn, .filter-trigger):disabled {
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+body .btn[aria-busy="true"] { cursor: wait; }
+body.admin .btn { font-weight: 550; }
+body.admin .desk-row-actions { align-items: center; gap: 8px; }
+body.admin .desk-row-actions :is(.btn, summary) { min-height: 38px; }
+body.admin .desk-row-actions summary {
+  width: 38px;
+  padding: 0;
+  border-color: var(--line);
+}
+body.admin .more-menu-popup { padding: 6px; gap: 4px; }
+body.admin .menu-item { min-height: 40px; line-height: 1.4; }
+body.admin .more-menu-popup .menu-item.danger {
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+}
+body.admin .modern-materials-table tbody tr:has(input[data-pick]:checked) {
+  background: var(--accent-soft);
+}
+body.admin .modern-materials-table tbody tr:focus-within {
+  outline: 1px solid var(--accent-border);
+  outline-offset: -1px;
+}
+body.admin :is(.desk-date, .desk-time, .desk-pagination) {
+  font-variant-numeric: tabular-nums;
+}
+body.admin .admin-nav-group { min-width: 0; }
+body.admin .admin-nav-group > summary {
+  min-height: 40px;
+  gap: 12px;
+  border-radius: 8px;
+}
+body.admin .admin-nav-group > summary:hover { background: var(--panel2); }
+body.admin .admin-nav-group > a { align-items: center; gap: 10px; }
+body.admin .admin-nav-group > a .icon { flex-shrink: 0; }
+body.admin .admin-nav-group > a span { min-width: 0; overflow-wrap: anywhere; }
+body.admin #admin-menu nav > .admin-nav-group { grid-column: 1 / -1; }
+body.admin #admin-menu .admin-nav-group > a { margin: 4px 0 4px 8px; }
+body.admin .desk-dialog-actions { gap: 10px; }
+body.admin .desk-dialog-actions .btn { min-height: 42px; }
+@media (pointer: coarse) {
+  body .lecture-row > .icon-btn { width: 44px; min-height: 44px; }
+  body .reader-tools .icon-btn { width: 44px; min-height: 44px; }
+  body.admin .desk-row-actions :is(.btn, summary) { min-height: 44px; }
+  body.admin .desk-row-actions summary { width: 44px; }
+}
+@media (max-width: 760px) {
+  body.admin .desk-row-actions :is(.btn, summary) { min-height: 44px; }
+  body.admin .desk-row-actions summary { width: 44px; }
+  body.admin .admin-nav-group > summary { min-height: 44px; }
+  body.admin .desk-dialog-actions { display: flex; flex-wrap: wrap; }
+  body.admin .desk-dialog-actions .btn { flex: 1 1 120px; min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body :is(.btn, .icon-btn, .filter-trigger) { transition: none; }
+}
