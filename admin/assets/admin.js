@@ -161,7 +161,7 @@ async function editor(){
     <a class="back-link" href="index.html">${icon('back')} К материалам</a>
     <div class="row editor-header-badges">
       <span class="lecture-status-badge ${l.published?'published':'draft'}" id="status-badge">${l.published?'● Опубликовано':'○ Черновик'}</span>
-      <a class="btn ghost btn-sm" href="help.html" target="_blank" rel="noopener">Правила оформления ↗</a>
+      <a class="btn ghost btn-sm" href="help.html" target="_blank" rel="noopener">Правила оформления →</a>
     </div>
   </div>
   <form id="editor-form" class="clean-editor-canvas" autocomplete="off">

@@ -8,7 +8,7 @@ window.AdminKit=(()=>{
  function duplicates(rows){const keys=new Map();for(const l of rows.filter(x=>!x.deleted_at)){const key=[l.subject_id,l.lecture_date,String(l.title||'').trim().toLowerCase().replace(/ё/g,'е').replace(/\s+/g,' ')].join('|');if(!keys.has(key))keys.set(key,[]);keys.get(key).push(l.id)}return new Set([...keys.values()].filter(v=>v.length>1).flat())}
  function issues(l,subjects,weeks,dups){const result=[];if(!l.title?.trim())result.push('Нет названия');if(!l.lecture_text?.trim())result.push('Нет текста лекции');if(!l.full_text?.trim())result.push('Нет транскрипции');if(!subjects.some(x=>x.id===l.subject_id))result.push('Предмет не найден');if(dups?.has(l.id))result.push('Совпадают тема, предмет и дата');return result}
  function modal(title){const d=document.createElement('dialog');d.className='desk-dialog kit-dialog';d.setAttribute('aria-label',title);d.innerHTML='<header><h2>'+e(title)+'</h2><button type="button" class="icon-btn" data-close aria-label="Закрыть">×</button></header><div class="desk-dialog-body"></div>';document.body.append(d);const opener=document.activeElement;d.querySelector('[data-close]').onclick=()=>d.close();d.addEventListener('close',()=>{d.remove();opener?.focus()},{once:true});d.showModal();return d}
- function preview(l,subjects){const d=modal('Предпросмотр материала'),body=d.querySelector('.desk-dialog-body'),modes=[['lecture_text','Лекция'],['full_text','Транскрипция'],['assignment_text','Задание'],['extra_text','Доп. материал']];body.innerHTML='<div class="kit-preview-head"><span class="kit-kicker">'+e(subjects.find(x=>x.id===l.subject_id)?.name||'Без предмета')+' · '+e(App.date(l.lecture_date))+'</span><h3>'+e(l.title)+'</h3><p>'+e(l.summary||'')+'</p><a class="btn" href="editor.html?id='+encodeURIComponent(l.id)+'">Открыть редактор ↗</a></div><div class="kit-tabs" role="tablist" aria-label="Версия текста">'+modes.map(([key,label])=>'<button type="button" role="tab" id="kit-tab-'+key+'" data-version="'+key+'" aria-controls="kit-preview-text">'+label+'</button>').join('')+'</div><article class="prose kit-preview-text" id="kit-preview-text" role="tabpanel"></article><div class="kit-preview-bottom"><span id="kit-preview-count"></span><button type="button" class="btn" id="kit-download-text">Скачать .md</button></div>';let current='lecture_text';function draw(){const text=l[current]||'';body.querySelectorAll('[data-version]').forEach(b=>{const on=b.dataset.version===current;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1});const host=body.querySelector('#kit-preview-text');host.setAttribute('aria-labelledby','kit-tab-'+current);host.innerHTML=text.trim()?Markdown.render(text):'<p class="muted">Эта версия пока не заполнена.</p>';if(current==='extra_text'&&l.extra_images?.length){const gallery=document.createElement('div');host.append(gallery);Extras.gallery(gallery,l.extra_images)}body.querySelector('#kit-preview-count').textContent=text.length.toLocaleString('ru-RU')+' символов';body.querySelector('#kit-download-text').disabled=!text.trim()}
+ function preview(l,subjects){const d=modal('Предпросмотр материала'),body=d.querySelector('.desk-dialog-body'),modes=[['lecture_text','Лекция'],['full_text','Транскрипция'],['assignment_text','Задание'],['extra_text','Доп. материал']];body.innerHTML='<div class="kit-preview-head"><span class="kit-kicker">'+e(subjects.find(x=>x.id===l.subject_id)?.name||'Без предмета')+' · '+e(App.date(l.lecture_date))+'</span><h3>'+e(l.title)+'</h3><p>'+e(l.summary||'')+'</p><a class="btn" href="editor.html?id='+encodeURIComponent(l.id)+'">Открыть редактор →</a></div><div class="kit-tabs" role="tablist" aria-label="Версия текста">'+modes.map(([key,label])=>'<button type="button" role="tab" id="kit-tab-'+key+'" data-version="'+key+'" aria-controls="kit-preview-text">'+label+'</button>').join('')+'</div><article class="prose kit-preview-text" id="kit-preview-text" role="tabpanel"></article><div class="kit-preview-bottom"><span id="kit-preview-count"></span><button type="button" class="btn" id="kit-download-text">Скачать .md</button></div>';let current='lecture_text';function draw(){const text=l[current]||'';body.querySelectorAll('[data-version]').forEach(b=>{const on=b.dataset.version===current;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1});const host=body.querySelector('#kit-preview-text');host.setAttribute('aria-labelledby','kit-tab-'+current);host.innerHTML=text.trim()?Markdown.render(text):'<p class="muted">Эта версия пока не заполнена.</p>';if(current==='extra_text'&&l.extra_images?.length){const gallery=document.createElement('div');host.append(gallery);Extras.gallery(gallery,l.extra_images)}body.querySelector('#kit-preview-count').textContent=text.length.toLocaleString('ru-RU')+' символов';body.querySelector('#kit-download-text').disabled=!text.trim()}
  body.querySelectorAll('[data-version]').forEach((b,i)=>{b.onclick=()=>{current=b.dataset.version;draw()};b.onkeydown=ev=>{if(!['ArrowRight','ArrowLeft'].includes(ev.key))return;ev.preventDefault();const key=modes[(i+(ev.key==='ArrowRight'?1:3))%4][0];body.querySelector('[data-version='+key+']').click();body.querySelector('[data-version='+key+']').focus()}});body.querySelector('#kit-download-text').onclick=()=>download('lecture-'+current+'-'+dateStamp()+'.md',l[current]||'','text/markdown;charset=utf-8');draw()}
  function audit(ctx){const live=ctx.lectures.filter(l=>!l.deleted_at),dups=duplicates(live),rows=live.map(l=>({l,issues:issues(l,ctx.subjects,ctx.weeks,dups)})).filter(x=>x.issues.length);const d=modal('Проверка материалов'),body=d.querySelector('.desk-dialog-body');body.innerHTML='<p class="kit-audit-intro">Проверены '+live.length+' материалов. '+(rows.length?'Внимания требуют: '+rows.length+'.':'Структурных недочётов не найдено.')+' Это подсказки: проверка не оценивает содержание и ничего не меняет.</p><label class="form-field"><span>Показать</span><select id="kit-audit-filter"><option value="">Все замечания</option>'+[...new Set(rows.flatMap(x=>x.issues))].map(v=>'<option>'+e(v)+'</option>').join('')+'</select></label><div class="kit-audit-list"></div>';function draw(){const filter=body.querySelector('select').value;body.querySelector('.kit-audit-list').innerHTML=rows.filter(x=>!filter||x.issues.includes(filter)).map(({l,issues})=>'<div class="kit-audit-row"><div><a href="editor.html?id='+encodeURIComponent(l.id)+'">'+e(l.title||'Без названия')+'</a><p>'+issues.map(e).join(' · ')+'</p></div><button type="button" class="btn" data-audit-preview="'+e(l.id)+'">Посмотреть</button></div>').join('')||'<p class="muted">По этому условию замечаний нет.</p>';body.querySelectorAll('[data-audit-preview]').forEach(b=>b.onclick=()=>preview(live.find(l=>l.id===b.dataset.auditPreview),ctx.subjects))}body.querySelector('select').onchange=draw;draw()}
  function filterLink(status,subject=''){return 'index.html?status='+encodeURIComponent(status)+'&subject='+encodeURIComponent(subject)}
@@ -27,22 +27,22 @@ window.AdminKit=(()=>{
     <a class="kit-metric-card" href="${filterLink('all')}">
       <span class="kit-metric-label">Материалов</span>
       <strong class="kit-metric-val">${live.length}</strong>
-      <span class="kit-metric-arrow">Список ↗</span>
+      <span class="kit-metric-arrow">Список →</span>
     </a>
     <a class="kit-metric-card" href="${filterLink('published')}">
       <span class="kit-metric-label">Опубликовано</span>
       <strong class="kit-metric-val">${published.length}</strong>
-      <span class="kit-metric-arrow">Список ↗</span>
+      <span class="kit-metric-arrow">Список →</span>
     </a>
     <a class="kit-metric-card" href="${filterLink('draft')}">
       <span class="kit-metric-label">Черновиков</span>
       <strong class="kit-metric-val">${drafts.length}</strong>
-      <span class="kit-metric-arrow">Список ↗</span>
+      <span class="kit-metric-arrow">Список →</span>
     </a>
     <a class="kit-metric-card ${needs.length ? 'has-issues' : ''}" href="${filterLink('issues')}">
       <span class="kit-metric-label">Требуют внимания</span>
       <strong class="kit-metric-val">${needs.length}</strong>
-      <span class="kit-metric-arrow">Список ↗</span>
+      <span class="kit-metric-arrow">Список →</span>
     </a>
   </div>
   <div class="kit-overview-columns">
@@ -50,7 +50,7 @@ window.AdminKit=(()=>{
       <section class="panel kit-section">
         <header class="spread align-center">
           <div><h2>Недавно изменены</h2></div>
-          <a class="btn ghost btn-sm" href="index.html?sort=updated">Все материалы ↗</a>
+          <a class="btn ghost btn-sm" href="index.html?sort=updated">Все материалы →</a>
         </header>
         <div class="kit-recent-list">
           ${recent.length ? recent.map(l=>`
@@ -90,7 +90,7 @@ window.AdminKit=(()=>{
       <section class="panel kit-section">
         <header class="spread align-center">
           <div><h2>План занятий</h2></div>
-          <a class="btn ghost btn-sm" href="schedule.html">Расписание ↗</a>
+          <a class="btn ghost btn-sm" href="schedule.html">Расписание →</a>
         </header>
         <div class="kit-planned-list">
           ${future.length ? future.map(l=>`
@@ -104,7 +104,7 @@ window.AdminKit=(()=>{
                   <span class="status-chip ${l.published?'published':'draft'}">${l.published?'Опубликовано':'Черновик'}</span>
                 </div>
               </div>
-              <span class="kit-arrow">↗</span>
+              <span class="kit-arrow">→</span>
             </a>
           `).join('') : '<p class="muted">Нет материалов с сегодняшней или будущей датой.</p>'}
         </div>
