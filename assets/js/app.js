@@ -5,7 +5,8 @@
  function resolvePage(urlStr=location.href){
   try{
    const u=new URL(urlStr,location.href),vp=u.searchParams.get('view');
-   if(vp&&['library','subjects','saved','reader','privacy','military'].includes(vp))return {page:vp,params:u.searchParams};
+   if(vp==='military')return {page:'library',params:u.searchParams};
+   if(vp&&['library','subjects','saved','reader','privacy'].includes(vp))return {page:vp,params:u.searchParams};
    const path=u.pathname.split('/').pop().toLowerCase();
    if(path==='subjects.html')return {page:'subjects',params:u.searchParams};
    if(path==='saved.html')return {page:'saved',params:u.searchParams};
@@ -26,13 +27,12 @@
  const favorites=()=>storage.get('lecture-favorites',[]);
  const sub=id=>subjects.find(s=>s.id===id)?.name||'Предмет';
  function updateChrome(p){
-  const titles={library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте',military:'Военная кафедра'};
+  const titles={library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте'};
   const b=document.querySelector('.topbar .crumb b');if(b)b.textContent=titles[p]||'Все лекции';
   document.querySelectorAll('.side-nav a, .mobile-nav a').forEach(a=>{
    const href=a.getAttribute('href')||'';
-   const active=(p==='military'&&href.includes('view=military'))||
-                (p==='library'&&!href.includes('view=military')&&(href.includes('index.html')||href==='./'))||
-                (p==='reader'&&!href.includes('view=military')&&(href.includes('index.html')||href==='./'))||
+   const active=(p==='library'&&(href.includes('index.html')||href==='./'))||
+                (p==='reader'&&(href.includes('index.html')||href==='./'))||
                 (p==='subjects'&&href.includes('subjects.html'))||
                 (p==='saved'&&href.includes('saved.html'));
    a.classList.toggle('active',!!active);
@@ -40,9 +40,9 @@
   });
  }
  function shell(){
-  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['military','index.html?view=military','shield','Военная кафедра'],['saved','saved.html','star','Избранное']];
+  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['saved','saved.html','star','Избранное']];
   const links=nav.map(([id,file,ic,label])=>{const on=page===id||(page==='reader'&&id==='library');return `<a href="${file}" class="${on?'active':''}" ${on?'aria-current="page"':''}>${icon(ic)}<span>${label}</span></a>`}).join('');
-  $('#app').innerHTML=`<a class="skip-link" href="#main">К материалам</a><aside class="sidebar"><a class="side-mark" href="index.html" aria-label="Материалы занятий"><div class="mark">${icon('sparkle')}</div><span>Материалы</span></a><div class="nav-label">БИБЛИОТЕКА</div><nav class="side-nav" aria-label="Основная навигация">${links}</nav><div class="side-bottom"><a href="privacy.html">О сайте ${icon("arrow")}</a></div></aside><div class="shell"><header class="topbar"><div class="crumb"><a class="crumb-root" href="index.html">Материалы</a> ${icon('chevron')} <b>${({library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте',military:'Военная кафедра'})[page]}</b></div><div class="top-right"><a class="top-help" href="privacy.html">О сайте</a></div></header><main class="content" id="main" tabindex="-1">${UI.skeleton(page)}</main>${App.footer()}</div><nav class="mobile-nav" aria-label="Основная навигация на телефоне">${links}</nav>`;
+  $('#app').innerHTML=`<a class="skip-link" href="#main">К материалам</a><aside class="sidebar"><a class="side-mark" href="index.html" aria-label="Материалы занятий"><div class="mark">${icon('sparkle')}</div><span>Материалы</span></a><div class="nav-label">БИБЛИОТЕКА</div><nav class="side-nav" aria-label="Основная навигация">${links}</nav><div class="side-bottom"><a href="privacy.html">О сайте ${icon("arrow")}</a></div></aside><div class="shell"><header class="topbar"><div class="crumb"><a class="crumb-root" href="index.html">Материалы</a> ${icon('chevron')} <b>${({library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте'})[page]}</b></div><div class="top-right"><a class="top-help" href="privacy.html">О сайте</a></div></header><main class="content" id="main" tabindex="-1">${UI.skeleton(page)}</main>${App.footer()}</div><nav class="mobile-nav" aria-label="Основная навигация на телефоне">${links}</nav>`;
  }
  let isNavigating=false;
  async function navigateTo(href,{replace=false,pop=false}={}){
@@ -67,8 +67,7 @@
     main.classList.add('is-transitioning');
     await new Promise(r=>setTimeout(r,40));
    }
-   if(page==='military')militaryPage();
-   else if(page==='subjects')subjectPage();
+   if(page==='subjects')subjectPage();
    else if(page==='reader')await reader();
    else if(page==='privacy')await privacy();
    else library();
@@ -174,10 +173,28 @@
   const version=resumed?({extra:'Доп. материал',assignment:'Задание',full:'Полная транскрипция',lecture:'Лекция'}[recent.mode]||'Лекция'):date(item.lecture_date,true);
   return `<a class="resume-card hero-feature" href="lecture.html?id=${encodeURIComponent(item.id)}${resumed&&['lecture','full','assignment','extra'].includes(recent.mode)?'&mode='+recent.mode:''}"><div class="feature-top"><span class="eyebrow">${label}</span><span class="feature-arrow">${icon('arrow')}</span></div><div class="feature-art" aria-hidden="true"><svg viewBox="0 0 360 92" fill="none"><path d="M1 73h358" stroke="currentColor" opacity=".2"/><g stroke="currentColor" stroke-width="1.1"><rect x="189" y="13" width="105" height="63" rx="5" transform="rotate(-9 189 13)" opacity=".35"/><rect x="205" y="10" width="105" height="63" rx="5" transform="rotate(-4 205 10)" opacity=".55"/><rect x="220" y="7" width="105" height="63" rx="5" fill="#e6eadf"/><path d="M235 24h40m-40 9h74m-74 9h63m-63 9h48" opacity=".6"/><circle cx="53" cy="44" r="22"/><path d="M53 12v64M21 44h64M30 21l46 46M30 67l46-46"/><path d="M102 44h73m-8-5 8 5-8 5" opacity=".4"/></g></svg></div><div class="feature-copy"><span class="feature-subject">${esc(sub(item.subject_id))}</span><h2>${esc(item.title)}</h2><p>${esc(version)}</p></div></a>`;
  }
+ function initSubjectScroll(){
+  const rail=$('.chips'),previous=$('.chip-scroll-prev'),next=$('.chip-scroll-next');
+  if(!rail||!previous||!next)return;
+  const update=()=>{const max=rail.scrollWidth-rail.clientWidth;previous.disabled=rail.scrollLeft<=1;next.disabled=rail.scrollLeft>=max-1;previous.hidden=next.hidden=max<=1};
+  previous.onclick=()=>rail.scrollBy({left:-Math.max(180,rail.clientWidth*.7),behavior:'smooth'});
+  next.onclick=()=>rail.scrollBy({left:Math.max(180,rail.clientWidth*.7),behavior:'smooth'});
+  rail.addEventListener('scroll',update,{passive:true});
+  rail.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;const before=rail.scrollLeft;rail.scrollLeft+=e.deltaY;if(rail.scrollLeft!==before)e.preventDefault()},{passive:false});
+  let drag=null,suppress=false;
+  rail.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;drag={x:e.clientX,left:rail.scrollLeft,moved:false}});
+  rail.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.clientX-drag.x)>5){drag.moved=true;rail.classList.add('is-dragging');rail.setPointerCapture(e.pointerId)}if(drag.moved)rail.scrollLeft=drag.left-(e.clientX-drag.x)});
+  const finish=()=>{if(!drag)return;suppress=drag.moved;drag=null;rail.classList.remove('is-dragging');if(suppress)setTimeout(()=>{suppress=false},0)};
+  rail.addEventListener('pointerup',finish);rail.addEventListener('pointercancel',finish);
+  rail.addEventListener('click',e=>{if(suppress){e.preventDefault();e.stopImmediatePropagation();suppress=false}},{capture:true});
+  if(window.ResizeObserver)new ResizeObserver((entries,observer)=>{if(!rail.isConnected){observer.disconnect();return}update()}).observe(rail);
+  requestAnimationFrame(update);
+ }
  function library(){
-  const view=UI.beginList(); selected=params.get('subject')||view.subject||''; search=view.search||''; tasksOnly=view.tasksOnly===true;visibleLimit=Math.max(40,Number(view.visibleLimit)||40);if(selected&&!subjects.some(s=>s.id===selected))selected='';
+  const view=UI.beginList(); selected=params.get('subject')||(params.get('view')==='military'?subjects.find(s=>s.name.trim().toLocaleLowerCase('ru')==='военная кафедра')?.id:'')||view.subject||''; search=view.search||''; tasksOnly=view.tasksOnly===true;visibleLimit=Math.max(40,Number(view.visibleLimit)||40);if(selected&&!subjects.some(s=>s.id===selected))selected='';
   const saved=page==='saved';
-  $('#main').innerHTML=`<div class="page-head library-heading ${saved?'saved-heading':''}"><div class="hero-lead"><div class="eyebrow"><span class="section-dot" aria-hidden="true"></span>${saved?'Личная подборка':'Материалы занятий'}</div><h1>${saved?'Избранное':'Материалы занятий'}</h1><p>${saved?'Всё, к чему хочется вернуться. Сохранено в этом браузере.':'Коротко о главном. Подробно — обо всём.'}</p>${!saved?`<div class="library-counts"><span><b>${lectures.length}</b> ${number(lectures.length,['лекция','лекции','лекций']).split(' ').slice(1).join(' ')}</span><span><b>${subjects.length}</b> ${number(subjects.length,['предмет','предмета','предметов']).split(' ').slice(1).join(' ')}</span><span class="hero-caption">По датам и темам</span></div>`:''}</div>${resumeCard()}</div><section class="library-browser" aria-label="Список лекций"><div class="filter-panel"><div class="toolbar"><div class="search-field" role="search"><span class="search-symbol" aria-hidden="true">${icon('search')}</span><input id="search" type="search" placeholder="Поиск по лекциям и текстам" aria-label="Поиск по теме, словам и тексту лекций" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-controls="list" aria-describedby="search-description"><span class="search-shortcut" aria-hidden="true">/</span><button id="clear-search" class="search-dismiss" type="button" aria-label="Очистить поиск" hidden>${icon('close')}</button></div><button class="btn library-filter-toggle" id="library-filter-toggle" type="button" aria-expanded="false" aria-controls="library-filter-options">${icon('settings')}<span>Фильтры</span><span id="filter-total" hidden></span></button></div><div class="library-filter-options" id="library-filter-options"><div class="custom-select-wrap library-sort"><select id="sort" aria-label="Сортировка"><option value="new">Сначала новые</option><option value="old">Сначала ранние</option></select>${icon('chevron')}</div><div class="mobile-subject-field custom-select-wrap"><select id="mobile-subject" aria-label="Предмет"><option value="">Все предметы</option>${subjects.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>${icon('chevron')}</div><div class="chips" aria-label="Фильтр по предмету"><button class="chip ${!selected?'active':''}" data-subject="" aria-pressed="${!selected}">Все предметы</button>${subjects.map(s=>`<button class="chip ${selected===s.id?'active':''}" data-subject="${esc(s.id)}" aria-pressed="${selected===s.id}">${esc(s.name)}</button>`).join('')}</div><div class="library-quick-filters"><button type="button" class="task-filter" id="tasks-only" aria-pressed="${tasksOnly}">${icon('book')}<span>С заданием</span><span class="task-total">${lectures.filter(hasTask).length}</span></button><span class="search-hint" id="search-description">Ищет во всех текстах и подписях к фото</span></div></div></div><div class="results-line"><button class="text-button reset-filters" id="reset-filters" type="button" hidden>Сбросить фильтры</button><span id="list-caption">Хронология</span><div class="results-actions"><span id="result-count" aria-live="polite"></span><button id="collapse-days" class="text-button" type="button">Свернуть дни</button></div></div><div id="list"></div><div class="load-more" id="load-more-wrap" hidden><span id="shown-count"></span><button class="btn" type="button" id="load-more">Показать ещё</button></div></section>`;
+  $('#main').innerHTML=`<div class="page-head library-heading ${saved?'saved-heading':''}"><div class="hero-lead"><div class="eyebrow"><span class="section-dot" aria-hidden="true"></span>${saved?'Личная подборка':'Материалы занятий'}</div><h1>${saved?'Избранное':'Материалы занятий'}</h1><p>${saved?'Всё, к чему хочется вернуться. Сохранено в этом браузере.':'Коротко о главном. Подробно — обо всём.'}</p>${!saved?`<div class="library-counts"><span><b>${lectures.length}</b> ${number(lectures.length,['лекция','лекции','лекций']).split(' ').slice(1).join(' ')}</span><span><b>${subjects.length}</b> ${number(subjects.length,['предмет','предмета','предметов']).split(' ').slice(1).join(' ')}</span><span class="hero-caption">По датам и темам</span></div>`:''}</div>${resumeCard()}</div><section class="library-browser" aria-label="Список лекций"><div class="filter-panel"><div class="toolbar"><div class="search-field" role="search"><span class="search-symbol" aria-hidden="true">${icon('search')}</span><input id="search" type="search" placeholder="Поиск по лекциям и текстам" aria-label="Поиск по теме, словам и тексту лекций" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-controls="list" aria-describedby="search-description"><span class="search-shortcut" aria-hidden="true">/</span><button id="clear-search" class="search-dismiss" type="button" aria-label="Очистить поиск" hidden>${icon('close')}</button></div><button class="btn library-filter-toggle" id="library-filter-toggle" type="button" aria-expanded="false" aria-controls="library-filter-options">${icon('settings')}<span>Фильтры</span><span id="filter-total" hidden></span></button></div><div class="library-filter-options" id="library-filter-options"><div class="custom-select-wrap library-sort"><select id="sort" aria-label="Сортировка"><option value="new">Сначала новые</option><option value="old">Сначала ранние</option></select>${icon('chevron')}</div><div class="mobile-subject-field custom-select-wrap"><select id="mobile-subject" aria-label="Предмет"><option value="">Все предметы</option>${subjects.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>${icon('chevron')}</div><div class="chips-shell"><button class="chip-scroll chip-scroll-prev" type="button" aria-label="Предыдущие предметы">${icon('back')}</button><div class="chips" role="region" tabindex="0" aria-label="Фильтр по предмету. Прокрутите, чтобы увидеть остальные предметы"><button class="chip ${!selected?'active':''}" data-subject="" aria-pressed="${!selected}">Все предметы</button>${subjects.map(s=>`<button class="chip ${s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?'chip-military':''} ${selected===s.id?'active':''}" data-subject="${esc(s.id)}" aria-pressed="${selected===s.id}">${s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?icon('shield'):''}${esc(s.name)}</button>`).join('')}</div><button class="chip-scroll chip-scroll-next" type="button" aria-label="Следующие предметы">${icon('arrow')}</button></div><div class="library-quick-filters"><button type="button" class="task-filter" id="tasks-only" aria-pressed="${tasksOnly}">${icon('book')}<span>С заданием</span><span class="task-total">${lectures.filter(hasTask).length}</span></button><span class="search-hint" id="search-description">Ищет во всех текстах и подписях к фото</span></div></div></div><div class="results-line"><button class="text-button reset-filters" id="reset-filters" type="button" hidden>Сбросить фильтры</button><span id="list-caption">Хронология</span><div class="results-actions"><span id="result-count" aria-live="polite"></span><button id="collapse-days" class="text-button" type="button">Свернуть дни</button></div></div><div id="list"></div><div class="load-more" id="load-more-wrap" hidden><span id="shown-count"></span><button class="btn" type="button" id="load-more">Показать ещё</button></div></section>`;
+  initSubjectScroll();
   const filterToggle=$('#library-filter-toggle'),filterPanel=$('.filter-panel');
   filterToggle.onclick=()=>{const open=filterToggle.getAttribute('aria-expanded')!=='true';filterToggle.setAttribute('aria-expanded',String(open));filterPanel.classList.toggle('filters-expanded',open)};
   $('#mobile-subject').value=selected;
@@ -227,15 +244,7 @@
   $('#load-more-wrap').hidden=list.length<=visibleLimit;$('#shown-count').textContent=`Показано ${Math.min(visibleLimit,list.length)} из ${list.length}`;$('#list').dataset.visibleLimit=visibleLimit;
   bindSave();UI.listRendered();if(animate===true)UI.searchResults();
  }
- function militaryPage(){
-  document.title='Военная кафедра — материалы занятий';
-  const subject=subjects.find(s=>s.name.trim().toLocaleLowerCase('ru')==='военная кафедра');
-  const items=subject?lectures.filter(l=>l.subject_id===subject.id):[];
-  search='';
-  $('#main').innerHTML=`<section class="military-hero"><div class="military-copy"><div class="military-kicker">${icon('shield')} Учебная дисциплина</div><h1>Военная кафедра</h1><p>Материалы занятий, лекции и задания — в одном разделе.</p><div class="military-count">${number(items.length,['занятие','занятия','занятий'])}</div></div><div class="military-emblem" aria-hidden="true">${icon('shield')}</div></section><section class="military-materials" aria-label="Материалы военной кафедры"><div class="military-section-head"><div><span class="military-overline">Учебные материалы</span><h2>Занятия</h2></div></div>${items.length?dateGroups(items):empty('Материалов пока нет','Лекции и задания появятся здесь после добавления.')}</section>`;
-  bindSave();
- }
- function subjectPage(){document.title='Предметы — материалы занятий';$('#main').innerHTML=`<div class="page-head collection-heading"><div class="eyebrow"><span class="section-dot" aria-hidden="true"></span>По дисциплинам</div><h1>Предметы<span class="heading-period" aria-hidden="true">.</span></h1><p>Каждая тема — на своём месте.</p></div>${subjects.length?`<div class="subjects-grid">${subjects.map((s,i)=>{const items=lectures.filter(l=>l.subject_id===s.id),n=items.length;const latest=items[0]?.lecture_date;return `<a class="subject-card ${s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?'military-card':''}" data-tone="${i%3}" href="${s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?'index.html?view=military':'index.html?subject='+encodeURIComponent(s.id)}"><div class="subject-cover" aria-hidden="true"><span class="subject-number">${String(i+1).padStart(2,'0')}</span><span class="subject-orbit">${icon('book')}</span></div><h2>${esc(s.name)}</h2><p class="subject-last">${latest?'Последнее занятие · '+esc(date(latest,true)):'Материалы появятся здесь'}</p><div class="spread"><span>${number(n,['лекция','лекции','лекций'])}</span>${icon('arrow')}</div></a>`}).join('')}</div>`:empty('Предметов пока нет','Они появятся после добавления владельцем.')}`}
+ function subjectPage(){document.title='Предметы — материалы занятий';$('#main').innerHTML=`<div class="page-head collection-heading"><div class="eyebrow"><span class="section-dot" aria-hidden="true"></span>По дисциплинам</div><h1>Предметы<span class="heading-period" aria-hidden="true">.</span></h1><p>Каждая тема — на своём месте.</p></div>${subjects.length?`<div class="subjects-grid">${subjects.map((s,i)=>{const items=lectures.filter(l=>l.subject_id===s.id),n=items.length;const latest=items[0]?.lecture_date;return `<a class="subject-card ${s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?'military-card':''}" data-tone="${i%3}" href="index.html?subject=${encodeURIComponent(s.id)}"><div class="subject-cover" aria-hidden="true"><span class="subject-number">${String(i+1).padStart(2,'0')}</span><span class="subject-orbit">${icon(s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?'shield':'book')}</span></div><h2>${esc(s.name)}</h2><p class="subject-last">${latest?'Последнее занятие · '+esc(date(latest,true)):'Материалы появятся здесь'}</p><div class="spread"><span>${number(n,['лекция','лекции','лекций'])}</span>${icon('arrow')}</div></a>`}).join('')}</div>`:empty('Предметов пока нет','Они появятся после добавления владельцем.')}`}
  async function reader(){
   const id=params.get('id');
   current=lectures.find(l=>l.id===id);
@@ -472,8 +481,7 @@
   },20000);
 
   if(!cached){
-   if(page==='military')militaryPage();
-   else if(page==='subjects')subjectPage();
+   if(page==='subjects')subjectPage();
    else if(page==='reader')await reader();
    else if(page==='privacy')await privacy();
    else library();

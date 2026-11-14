@@ -1,5 +1,23 @@
-/* A restrained identity for the military department, within the existing palette. */
-.military-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:28px;min-height:230px;padding:38px 42px;border:1px solid #444b3e;border-radius:14px;overflow:hidden;background:linear-gradient(125deg,#252b23,#20231f 65%,#1c1d1b);color:#f1f2e9}
-.military-hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(196,211,163,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(196,211,163,.035) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
-.military-copy,.military-emblem{position:relative;z-index:1}.military-kicker,.military-overline{display:flex;align-items:center;gap:9px;color:#b7c79d;text-transform:uppercase;letter-spacing:.14em;font-size:10px;font-weight:700}.military-kicker .icon{width:17px;height:17px}.military-hero h1{margin:17px 0 10px;font-family:var(--font-display);font-size:clamp(32px,4.5vw,52px);line-height:1.1;letter-spacing:-.035em}.military-hero p{max-width:480px;margin:0;color:#b7bdb0;line-height:1.6}.military-count{display:inline-flex;margin-top:23px;padding:7px 10px;border:1px solid #4b5843;border-radius:6px;color:#d0dbc1;font-size:12px}.military-emblem{display:grid;place-items:center;flex:none;width:124px;height:124px;border:1px solid #536047;border-radius:50%;color:#adbf96;background:#b8c99c0a}.military-emblem .icon{width:55px;height:55px;stroke-width:1.1}.military-materials{margin-top:36px}.military-section-head{padding-bottom:18px;border-bottom:1px solid #343a31}.military-section-head h2{margin:8px 0 0;font-family:var(--font-display);font-size:28px;font-weight:500}.military-card .subject-cover{background:#303a2c;color:#d0dbc1}.military-card .subject-cover::after{background-size:24px 24px}.military-card .subject-orbit{color:#c6d5b5}
-@media(max-width:600px){.military-hero{min-height:0;padding:27px 23px;gap:12px}.military-hero h1{font-size:32px}.military-hero p{font-size:14px}.military-emblem{width:68px;height:68px}.military-emblem .icon{width:31px;height:31px}.military-materials{margin-top:28px}.mobile-nav a[href*="view=military"] span{font-size:9px;line-height:1.15;text-align:center}.mobile-nav a{min-width:0}}
+/* Subject selector: visible, accessible controls with native horizontal scrolling. */
+.chips-shell{grid-column:1;grid-row:1;display:flex;align-items:flex-start;min-width:0;gap:5px}
+.library-filter-options .chips{flex:1;min-width:0;margin:0;scrollbar-width:thin;scrollbar-color:#595f54 transparent;touch-action:pan-x;cursor:grab}
+.library-filter-options .chips::-webkit-scrollbar{display:block;height:4px}
+.library-filter-options .chips::-webkit-scrollbar-thumb{background:#595f54;border-radius:8px}
+.chips.is-dragging,.chips.is-dragging *{cursor:grabbing!important;user-select:none}
+.chip-scroll{flex:none;display:grid;place-items:center;width:31px;height:34px;margin-top:3px;padding:0;color:#c0c2bc;border:1px solid #3c3e3a;border-radius:8px;background:#242624;cursor:pointer}
+.chip-scroll:hover:not(:disabled){background:#333a30;border-color:#68765e;color:#edf1e9}
+.chip-scroll:disabled{opacity:.35;cursor:default}.chip-scroll[hidden]{display:none}
+.chip-scroll .icon{width:15px;height:15px}
+.chip-military{color:#e0e9d3;border-color:#718261;background:linear-gradient(115deg,#485a3c,#303c2a);font-weight:650;box-shadow:inset 0 1px #ffffff12}
+.chip-military::before{display:none}.chip-military .icon{width:15px;height:15px;color:#bcd2a6}
+.chip-military:hover,.chip-military.active{background:#53694a;border-color:#a5bb91;color:#fff;box-shadow:inset 0 0 0 1px #ffffff1a}
+/* Military subject cover is distinct while keeping the site's dark visual language. */
+.subject-card.military-card{border-color:#596d50;background:linear-gradient(150deg,#272f25,#222622 70%);box-shadow:inset 0 0 0 1px #a4b7930b}
+.military-card .subject-cover{height:160px;background:linear-gradient(125deg,#293628,#3b4d33 56%,#202a20);color:#d6e3c9}
+.military-card .subject-cover::before{background:radial-gradient(circle at 78% 35%,#b4cd9840,transparent 34%),linear-gradient(120deg,#111a12a8,transparent 62%)}
+.military-card .subject-cover::after{opacity:.22;background-image:linear-gradient(#c5d9ae66 1px,transparent 1px),linear-gradient(90deg,#c5d9ae66 1px,transparent 1px);background-size:26px 26px}
+.military-card .subject-number{color:#d6e3c9;opacity:.22}.military-card .subject-orbit{color:#e1edda;border-color:#d0e5bb80;background:#1d291f66;box-shadow:0 0 0 9px #b8d39d0a}
+.military-card .subject-orbit .icon{width:37px;height:37px;stroke-width:1.5}.military-card h2{color:#f0f4eb}.military-card>.spread{border-color:#465341}.military-card>.spread>.icon{color:#bdd1af}
+.subject-card.military-card:hover{border-color:#9fb592;box-shadow:0 10px 30px #0003}
+@media(max-width:680px){.chips-shell{display:none}.military-card .subject-cover{height:78px}.military-card .subject-orbit{box-shadow:0 0 0 4px #b8d39d0a}.military-card .subject-orbit .icon{width:25px;height:25px}}
+@media(max-width:480px){.military-card .subject-cover{height:56px}}
