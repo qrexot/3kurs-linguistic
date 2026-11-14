@@ -5,7 +5,7 @@
  function resolvePage(urlStr=location.href){
   try{
    const u=new URL(urlStr,location.href),vp=u.searchParams.get('view');
-   if(vp&&['library','subjects','saved','reader','privacy'].includes(vp))return {page:vp,params:u.searchParams};
+   if(vp&&['library','subjects','saved','reader','privacy','military'].includes(vp))return {page:vp,params:u.searchParams};
    const path=u.pathname.split('/').pop().toLowerCase();
    if(path==='subjects.html')return {page:'subjects',params:u.searchParams};
    if(path==='saved.html')return {page:'saved',params:u.searchParams};
@@ -26,12 +26,13 @@
  const favorites=()=>storage.get('lecture-favorites',[]);
  const sub=id=>subjects.find(s=>s.id===id)?.name||'Предмет';
  function updateChrome(p){
-  const titles={library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте'};
+  const titles={library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте',military:'Военная кафедра'};
   const b=document.querySelector('.topbar .crumb b');if(b)b.textContent=titles[p]||'Все лекции';
   document.querySelectorAll('.side-nav a, .mobile-nav a').forEach(a=>{
    const href=a.getAttribute('href')||'';
-   const active=(p==='library'&&(href.includes('index.html')||href==='./'))||
-                (p==='reader'&&(href.includes('index.html')||href==='./'))||
+   const active=(p==='military'&&href.includes('view=military'))||
+                (p==='library'&&!href.includes('view=military')&&(href.includes('index.html')||href==='./'))||
+                (p==='reader'&&!href.includes('view=military')&&(href.includes('index.html')||href==='./'))||
                 (p==='subjects'&&href.includes('subjects.html'))||
                 (p==='saved'&&href.includes('saved.html'));
    a.classList.toggle('active',!!active);
@@ -39,9 +40,9 @@
   });
  }
  function shell(){
-  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['saved','saved.html','star','Избранное']];
+  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['military','index.html?view=military','shield','Военная кафедра'],['saved','saved.html','star','Избранное']];
   const links=nav.map(([id,file,ic,label])=>{const on=page===id||(page==='reader'&&id==='library');return `<a href="${file}" class="${on?'active':''}" ${on?'aria-current="page"':''}>${icon(ic)}<span>${label}</span></a>`}).join('');
-  $('#app').innerHTML=`<a class="skip-link" href="#main">К материалам</a><aside class="sidebar"><a class="side-mark" href="index.html" aria-label="Материалы занятий"><div class="mark">${icon('sparkle')}</div><span>Материалы</span></a><div class="nav-label">БИБЛИОТЕКА</div><nav class="side-nav" aria-label="Основная навигация">${links}</nav><div class="side-bottom"><a href="privacy.html">О сайте ${icon("arrow")}</a></div></aside><div class="shell"><header class="topbar"><div class="crumb"><a class="crumb-root" href="index.html">Материалы</a> ${icon('chevron')} <b>${({library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте'})[page]}</b></div><div class="top-right"><a class="top-help" href="privacy.html">О сайте</a></div></header><main class="content" id="main" tabindex="-1">${UI.skeleton(page)}</main>${App.footer()}</div><nav class="mobile-nav" aria-label="Основная навигация на телефоне">${links}</nav>`;
+  $('#app').innerHTML=`<a class="skip-link" href="#main">К материалам</a><aside class="sidebar"><a class="side-mark" href="index.html" aria-label="Материалы занятий"><div class="mark">${icon('sparkle')}</div><span>Материалы</span></a><div class="nav-label">БИБЛИОТЕКА</div><nav class="side-nav" aria-label="Основная навигация">${links}</nav><div class="side-bottom"><a href="privacy.html">О сайте ${icon("arrow")}</a></div></aside><div class="shell"><header class="topbar"><div class="crumb"><a class="crumb-root" href="index.html">Материалы</a> ${icon('chevron')} <b>${({library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте',military:'Военная кафедра'})[page]}</b></div><div class="top-right"><a class="top-help" href="privacy.html">О сайте</a></div></header><main class="content" id="main" tabindex="-1">${UI.skeleton(page)}</main>${App.footer()}</div><nav class="mobile-nav" aria-label="Основная навигация на телефоне">${links}</nav>`;
  }
  let isNavigating=false;
  async function navigateTo(href,{replace=false,pop=false}={}){
@@ -66,7 +67,8 @@
     main.classList.add('is-transitioning');
     await new Promise(r=>setTimeout(r,40));
    }
-   if(page==='subjects')subjectPage();
+   if(page==='military')militaryPage();
+   else if(page==='subjects')subjectPage();
    else if(page==='reader')await reader();
    else if(page==='privacy')await privacy();
    else library();
@@ -225,7 +227,15 @@
   $('#load-more-wrap').hidden=list.length<=visibleLimit;$('#shown-count').textContent=`Показано ${Math.min(visibleLimit,list.length)} из ${list.length}`;$('#list').dataset.visibleLimit=visibleLimit;
   bindSave();UI.listRendered();if(animate===true)UI.searchResults();
  }
- function subjectPage(){document.title='Предметы — материалы занятий';$('#main').innerHTML=`<div class="page-head collection-heading"><div class="eyebrow"><span class="section-dot" aria-hidden="true"></span>По дисциплинам</div><h1>Предметы<span class="heading-period" aria-hidden="true">.</span></h1><p>Каждая тема — на своём месте.</p></div>${subjects.length?`<div class="subjects-grid">${subjects.map((s,i)=>{const items=lectures.filter(l=>l.subject_id===s.id),n=items.length;const latest=items[0]?.lecture_date;return `<a class="subject-card" data-tone="${i%3}" href="index.html?subject=${encodeURIComponent(s.id)}"><div class="subject-cover" aria-hidden="true"><span class="subject-number">${String(i+1).padStart(2,'0')}</span><span class="subject-orbit">${icon('book')}</span></div><h2>${esc(s.name)}</h2><p class="subject-last">${latest?'Последнее занятие · '+esc(date(latest,true)):'Материалы появятся здесь'}</p><div class="spread"><span>${number(n,['лекция','лекции','лекций'])}</span>${icon('arrow')}</div></a>`}).join('')}</div>`:empty('Предметов пока нет','Они появятся после добавления владельцем.')}`}
+ function militaryPage(){
+  document.title='Военная кафедра — материалы занятий';
+  const subject=subjects.find(s=>s.name.trim().toLocaleLowerCase('ru')==='военная кафедра');
+  const items=subject?lectures.filter(l=>l.subject_id===subject.id):[];
+  search='';
+  $('#main').innerHTML=`<section class="military-hero"><div class="military-copy"><div class="military-kicker">${icon('shield')} Учебная дисциплина</div><h1>Военная кафедра</h1><p>Материалы занятий, лекции и задания — в одном разделе.</p><div class="military-count">${number(items.length,['занятие','занятия','занятий'])}</div></div><div class="military-emblem" aria-hidden="true">${icon('shield')}</div></section><section class="military-materials" aria-label="Материалы военной кафедры"><div class="military-section-head"><div><span class="military-overline">Учебные материалы</span><h2>Занятия</h2></div></div>${items.length?dateGroups(items):empty('Материалов пока нет','Лекции и задания появятся здесь после добавления.')}</section>`;
+  bindSave();
+ }
+ function subjectPage(){document.title='Предметы — материалы занятий';$('#main').innerHTML=`<div class="page-head collection-heading"><div class="eyebrow"><span class="section-dot" aria-hidden="true"></span>По дисциплинам</div><h1>Предметы<span class="heading-period" aria-hidden="true">.</span></h1><p>Каждая тема — на своём месте.</p></div>${subjects.length?`<div class="subjects-grid">${subjects.map((s,i)=>{const items=lectures.filter(l=>l.subject_id===s.id),n=items.length;const latest=items[0]?.lecture_date;return `<a class="subject-card ${s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?'military-card':''}" data-tone="${i%3}" href="${s.name.trim().toLocaleLowerCase('ru')==='военная кафедра'?'index.html?view=military':'index.html?subject='+encodeURIComponent(s.id)}"><div class="subject-cover" aria-hidden="true"><span class="subject-number">${String(i+1).padStart(2,'0')}</span><span class="subject-orbit">${icon('book')}</span></div><h2>${esc(s.name)}</h2><p class="subject-last">${latest?'Последнее занятие · '+esc(date(latest,true)):'Материалы появятся здесь'}</p><div class="spread"><span>${number(n,['лекция','лекции','лекций'])}</span>${icon('arrow')}</div></a>`}).join('')}</div>`:empty('Предметов пока нет','Они появятся после добавления владельцем.')}`}
  async function reader(){
   const id=params.get('id');
   current=lectures.find(l=>l.id===id);
@@ -462,7 +472,8 @@
   },20000);
 
   if(!cached){
-   if(page==='subjects')subjectPage();
+   if(page==='military')militaryPage();
+   else if(page==='subjects')subjectPage();
    else if(page==='reader')await reader();
    else if(page==='privacy')await privacy();
    else library();

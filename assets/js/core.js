@@ -4,6 +4,7 @@ window.App = (() => {
  const esc = v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icons={
   claude:'<g fill="currentColor"><rect x="10.2" y="2" width="3.6" height="20" rx="1.8"/><rect x="10.2" y="2" width="3.6" height="20" rx="1.8" transform="rotate(45 12 12)"/><rect x="10.2" y="2" width="3.6" height="20" rx="1.8" transform="rotate(90 12 12)"/><rect x="10.2" y="2" width="3.6" height="20" rx="1.8" transform="rotate(135 12 12)"/></g>',
+  shield:'<path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6Z"/><path d="m9 12 2 2 4-4"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   book:'<path d="M12 5v16M3 4c4-1 6-1 9 1 3-2 5-2 9-1v15c-4-1-6-1-9 1-3-2-5-2-9-1Z"/>',
   star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/>',
