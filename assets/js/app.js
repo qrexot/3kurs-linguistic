@@ -426,7 +426,7 @@
  }
 
  window.addEventListener('site-paused',()=>{locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null});
- SiteAvailability.start().catch(()=>{});
+ const availabilityReady=SiteAvailability.start();
 
  shell();
  // Content is never rendered from cache before server-side authorization.
@@ -435,6 +435,7 @@
  document.body.classList.add('awaiting-access');
 
  try{
+  await availabilityReady;
   await DB.ensureVisitor();
   await NameGate.ensure();
   await VisitorAccess.ensure();
@@ -511,3 +512,4 @@
  window.addEventListener('session-lost',()=>{try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');subjects=[];weeks=[];lectures=[];current=null;locked=true;clearInterval(poll);clearInterval(tracking);$('#main').innerHTML=empty('Сессия завершена','Обновите страницу, чтобы снова открыть материалы.','<button class="btn" onclick="location.reload()">Обновить</button>')});
  window.addEventListener('offline',()=>toast('Нет интернета. Новые материалы пока не загрузятся.'));
 })();
+

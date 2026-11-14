@@ -1,8 +1,12 @@
 'use strict';
 window.DB = (()=>{
- const admin=document.body.dataset.admin==='true', key=admin?'lecture-admin-session':'lecture-visitor-session';
+ const admin=document.body.dataset.admin==='true';
+ const handoffKey='lecture-reader-pause-handoff';
+ let handoff=null;try{handoff=sessionStorage.getItem(handoffKey);sessionStorage.removeItem(handoffKey)}catch{}
+ let key=admin?'lecture-admin-session':(/^[a-f0-9]{64}$/.test(handoff||'')?'lecture-pause-visitor-session':'lecture-visitor-session');
  let session=App.storage.get(key),refreshPromise=null;
- const readerProof=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');
+ const readerProof=/^[a-f0-9]{64}$/.test(handoff||'')?handoff:Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');
+ function carryReaderProof(){try{sessionStorage.setItem(handoffKey,readerProof);if(sessionStorage.getItem(handoffKey)!==readerProof)throw new Error()}catch{throw new Error('Разрешите хранение данных в браузере и повторите вход.')}}
  let readerDevice=null;
  function browserKey(){if(admin)return null;if(readerDevice)return readerDevice;const name='lecture-reader-device-v1';let value=localStorage.getItem(name);if(!/^[a-f0-9]{64}$/.test(value||'')){value=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');localStorage.setItem(name,value);if(localStorage.getItem(name)!==value)throw new Error('Разрешите сохранение данных сайта.')}readerDevice=value;return value}
 
@@ -36,6 +40,7 @@ window.DB = (()=>{
  async function refresh(){if(refreshPromise)return refreshPromise;refreshPromise=exclusive(async()=>{const current=App.storage.get(key)||session;if(current&&current.access_token!==session?.access_token&&current.expires_at>Date.now()/1000+45){session=current;return}try{if(!current?.refresh_token)throw new Error('session_expired');save(await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:current.refresh_token})},false))}catch(e){if(e.status===400||e.status===401||e.message==='session_expired'){const newer=App.storage.get(key);if(newer?.refresh_token&&newer.refresh_token!==current?.refresh_token){session=newer;return}save(null);window.dispatchEvent(new Event('session-lost'))}throw e}}).finally(()=>refreshPromise=null);return refreshPromise}
  let visitorPromise=null;
  async function ensureVisitor(){if(visitorPromise)return visitorPromise;visitorPromise=(async()=>{await exclusive(async()=>{session=App.storage.get(key)||session;if(!admin)browserKey();if(!session){try{const probe=key+'-probe';localStorage.setItem(probe,'1');if(localStorage.getItem(probe)!=='1')throw new Error();localStorage.removeItem(probe)}catch{throw new Error('Браузер не сохраняет данные сайта. Разрешите локальное хранилище и откройте сайт снова.')}save(await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({data:{source:'lecture-browser'}})},false));if(!App.storage.get(key)?.refresh_token)throw new Error('Не удалось сохранить сессию браузера. Разрешите хранение данных сайта.')}});if(!session)throw new Error('Анонимный доступ недоступен. Обратитесь к владельцу.');if(session.expires_at<Date.now()/1000+45)await refresh();return session})().finally(()=>visitorPromise=null);return visitorPromise}
+ async function usePauseIdentity(){if(admin)throw new Error('Недоступно');if(visitorPromise)await visitorPromise.catch(()=>{});if(refreshPromise)await refreshPromise.catch(()=>{});key='lecture-pause-visitor-session';session=App.storage.get(key);}
  async function login(email,password){save(await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},false));return session}
  async function logout(){try{if(session)await request('/auth/v1/logout',{method:'POST'})}finally{save(null)}}
  function select(table,query=''){return request('/rest/v1/'+table+'?'+query)}
@@ -45,5 +50,6 @@ window.DB = (()=>{
  function remove(table,id){return request('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=representation'}})}
  async function profile(){if(!session?.user?.id)throw new Error('session_expired');const rows=await select('profiles','select=*&id=eq.'+session.user.id);if(!rows[0])throw new Error('Профиль не найден. Проверьте настройку базы.');return rows[0]}
  window.addEventListener('storage',e=>{if(e.key===key){session=App.storage.get(key);if(!session)window.dispatchEvent(new Event('session-lost'))}});
- return {request,ensureVisitor,login,logout,select,rpc,insert,update,remove,profile,get session(){return session}};
+ return {request,ensureVisitor,login,logout,select,rpc,insert,update,remove,profile,carryReaderProof,usePauseIdentity,get session(){return session}};
 })();
+
