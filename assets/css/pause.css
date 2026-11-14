@@ -31,3 +31,5 @@ body.site-paused{overflow:hidden}
 #site-pause .pause-telegram{background:#229ed9;border-color:#229ed9;color:#fff;box-shadow:0 5px 18px rgba(34,158,217,.2)}
 #site-pause .pause-telegram svg{width:21px;height:21px}
 @media(hover:hover){#site-pause .pause-telegram:hover{background:#168ec8;border-color:#168ec8;box-shadow:0 7px 22px rgba(34,158,217,.3)}}
+
+.pause-date{font-size:11px;color:#9c9c9c;line-height:1.7;margin:12px 0 0}.pause-date[hidden]{display:none}

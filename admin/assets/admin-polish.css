@@ -1,0 +1,31 @@
+/* Refinement, without changing the established color tokens. */
+body.admin.quiet-admin .page-head h1{font-size:32px;line-height:1.25;letter-spacing:-.7px}
+body.admin.quiet-admin .page-head{gap:20px;margin-bottom:28px}
+body.admin.quiet-admin .page-head p{max-width:650px;line-height:1.75}
+body.admin.quiet-admin .btn{font-weight:550;line-height:1.4;transition:background-color .16s,border-color .16s,box-shadow .16s;min-height:42px}
+body.admin.quiet-admin .btn:disabled{cursor:not-allowed;opacity:.45}
+body.admin.quiet-admin .btn:focus-visible,body.admin.quiet-admin summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+body.admin.quiet-admin :is(input,textarea,select):focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);outline:0}
+body.admin.quiet-admin .panel{box-shadow:none}
+body.admin.quiet-admin .quiet-tabs{gap:8px;border:1px solid var(--line);border-radius:11px;padding:5px;background:var(--bg);width:fit-content;max-width:100%}
+body.admin.quiet-admin .quiet-tabs button{padding:10px 16px;border:1px solid transparent;border-radius:7px;font-size:13px;min-height:42px}
+body.admin.quiet-admin .quiet-tabs button[aria-pressed=true]{background:var(--panel2);border-color:var(--line);color:var(--text)}
+body.admin.quiet-admin .desk-table th{font-size:11px;letter-spacing:.03em;color:var(--muted)}
+body.admin.quiet-admin .desk-table td{padding-block:17px}
+body.admin.quiet-admin .desk-table tbody tr:hover{background:var(--panel2)}
+body.admin.quiet-admin .desk-dialog{border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 80px #0007}
+body.admin.quiet-admin .desk-dialog>header{border-bottom:1px solid var(--line);padding:22px 24px;gap:16px}
+body.admin.quiet-admin .desk-dialog>header h2{font-size:22px;margin:0 0 5px}
+body.admin.quiet-admin .desk-dialog>header p{margin:0}
+body.admin.quiet-admin .desk-dialog::backdrop{background:#0009;backdrop-filter:blur(3px)}
+body.admin.quiet-admin .reader-account{padding:20px;margin:14px 0;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+body.admin.quiet-admin .reader-account-help{border-color:var(--line);background:var(--panel2);color:var(--muted)}
+body.admin.quiet-admin .reader-account-state{margin-left:auto}
+body.admin.quiet-admin .reader-accounts-dialog h3{font-size:15px;font-weight:600}
+body.admin.quiet-admin .reader-account-help summary{cursor:pointer;color:var(--text);font-size:13px;font-weight:550;min-height:30px;line-height:1.6}
+body.admin.quiet-admin #reader-accounts-error:empty{display:none}
+body.admin.quiet-admin .reader-account-empty{padding:30px 20px;border:1px dashed var(--line-strong);border-radius:12px;text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
+body.admin.quiet-admin .reader-legacy-note{font-size:12px;padding:10px 12px;color:var(--muted);border:1px solid var(--line);border-radius:8px}
+body.admin.quiet-admin .reader-password-note{font-size:11px;font-weight:400;color:var(--muted);line-height:1.6}
+@media(max-width:760px){body.admin.quiet-admin .page-head h1{font-size:28px}body.admin.quiet-admin .page-head{gap:16px;margin-bottom:22px}body.admin.quiet-admin .btn{min-height:44px}body.admin.quiet-admin .quiet-tabs{width:100%}body.admin.quiet-admin .quiet-tabs button{flex:1;padding:9px;font-size:12px}body.admin.quiet-admin .desk-dialog>header{padding:18px}body.admin.quiet-admin .reader-account{padding:16px}body.admin.quiet-admin .reader-account-state{margin-left:0}body.admin.quiet-admin .reader-limit-form{padding:12px}body.admin.quiet-admin .reader-limit{gap:10px}body.admin.quiet-admin .reader-limit>label:first-child{max-width:100%}}
+@media(prefers-reduced-motion:reduce){body.admin.quiet-admin .btn{transition:none}}

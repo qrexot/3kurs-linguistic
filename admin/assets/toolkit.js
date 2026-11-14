@@ -163,7 +163,7 @@ window.AdminKit=(()=>{
   const status=document.querySelector('#kit-site-status');
   if(result[0].status==='fulfilled'&&typeof result[0].value?.paused==='boolean'){
     const paused=result[0].value.paused;
-    status.innerHTML='<div class="kit-site-indicator '+(paused?'paused':'')+'"><i></i><div><strong>'+(paused?'Сайт временно отключён':'Сайт открыт')+'</strong><span>'+(paused?'Посетители видят экран ожидания.':'Посетители могут читать опубликованные материалы.')+'</span></div></div>';
+    status.innerHTML='<div class="kit-site-indicator '+(paused?'paused':'')+'"><i></i><div><strong data-access-status>'+(paused?AccessPresentation.closedTitle:AccessPresentation.openTitle)+'</strong><span data-access-summary>'+(paused?'Материалы доступны только через специальный вход.':'Посетители могут читать материалы без логина и пароля.')+'</span></div></div>';
   }else status.textContent='Не удалось проверить состояние. Откройте настройки сайта.';
   document.querySelector('#kit-pending').textContent=result[1].status==='fulfilled'?String(result[1].value?.summary?.groups??result[1].value?.total??'—'):'—';
 }
