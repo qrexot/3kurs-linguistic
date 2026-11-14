@@ -304,7 +304,7 @@
   if(aboutDataCache){renderAbout(aboutDataCache);return}
   $('#main').innerHTML='<div class="about-layout"><div class="loading" role="status">Загружаем описание…</div></div>';
   try{
-   const rows=await DB.request('/rest/v1/site_about?select=title,body,updated_at&id=eq.1',{headers:{Authorization:'Bearer '+CONFIG.key}},false);
+   const rows=await DB.select('site_about','select=title,body,updated_at&id=eq.1');
    if(!rows?.[0])throw new Error('Описание ещё не опубликовано');
    aboutDataCache=rows[0];renderAbout(aboutDataCache);
   }catch(e){
@@ -314,7 +314,9 @@
  }
  function renderAbout(info){
   document.title=info.title+' — материалы занятий';
-  $('#main').innerHTML=`<div class="about-layout"><a class="back-link" href="index.html">${icon('back')} К материалам</a><header class="about-heading"><span class="eyebrow">От автора</span><h1>${esc(info.title)}</h1></header><article class="prose about-copy">${Markdown.render(info.body)}</article><p class="analytics-disclosure">Сайт сохраняет сведения о посещениях: открытые страницы и материалы, примерное время с открытой видимой вкладкой и технические данные браузера и устройства. Для определения примерного региона используется IP-адрес; данные о сети могут быть неточны и обрабатываются внешними сервисами. Сведения о просмотренных материалах и сети доступны владельцу сайта. Время является оценкой и может отличаться при потере связи или использовании нескольких вкладок.</p></div>`;
+  const description=String(info.body||'').trim();
+  const body=description&&!/^(?:\.{3,}|…)$/.test(description)?description:'Здесь собраны материалы занятий по разным предметам: лекции, полные транскрипции, задания и дополнительные материалы. Найти нужное можно по предмету, дате или словам из текста.';
+  $('#main').innerHTML=`<div class="about-layout"><a class="back-link" href="index.html">${icon('back')} К материалам</a><header class="about-heading"><span class="eyebrow">От автора</span><h1>${esc(info.title)}</h1></header><article class="prose about-copy">${Markdown.render(body)}</article><p class="analytics-disclosure">Сайт сохраняет сведения о посещениях: открытые страницы и материалы, примерное время с открытой видимой вкладкой и технические данные браузера и устройства. Для определения примерного региона используется IP-адрес; данные о сети могут быть неточны и обрабатываются внешними сервисами. Сведения о просмотренных материалах и сети доступны владельцу сайта. Время является оценкой и может отличаться при потере связи или использовании нескольких вкладок.</p></div>`;
   UI.ready();
  }
 
