@@ -65,8 +65,24 @@ window.SiteAvailability=(()=>{
    const s=await DB.request('/rest/v1/rpc/site_status',{method:'POST',body:'{}',headers:{Authorization:'Bearer '+CONFIG.key}},false);
    if(!s||typeof s.paused!=='boolean')throw new Error('status');
    if(s.paused){
-    let allowed=false;if(DB.session){try{allowed=await DB.rpc('reader_pause_access')===true}catch{}}
-    if(allowed){bypass=true;paused=false;if(host())unscreen();if(!booted){booted=true;bootResolve?.()}return}
+    let allowed=false;
+    if(s.ip_allowed===true||DB.session){
+     try{
+      if(s.ip_allowed===true)await DB.ensureVisitor();
+      allowed=await DB.rpc('reader_pause_access')===true;
+     }catch{}
+    }
+    if(allowed){
+     if(paused&&booted){
+      if(s.ip_allowed!==true)DB.carryReaderProof();
+      location.reload();
+      return;
+     }
+     bypass=true;paused=false;
+     if(host())unscreen();
+     if(!booted){booted=true;bootResolve?.()}
+     return;
+    }
     bypass=false;
     if(!paused){paused=true;if(booted)window.dispatchEvent(new Event('site-paused'))}
     if(!host()||s.message!==lastMessage||s.paused_at!==lastPausedAt||host().classList.contains('pause-error'))screen(s.message,false,s.paused_at);

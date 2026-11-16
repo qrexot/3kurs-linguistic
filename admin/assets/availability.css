@@ -43,3 +43,18 @@
 .admin-logged-out .admin-access-link{display:none}
 @media(max-width:1100px){.access-heading{flex-direction:column;gap:10px}.access-editor-grid{gap:22px}.access-facts>div{padding:15px}.access-mode-action{align-items:flex-start;flex-direction:column}.access-special-link{align-items:flex-start;flex-direction:column}.quiet-admin .topbar .admin-access-link{max-width:190px}}
 @media(max-width:760px){.access-heading{padding:21px}.access-heading h2{font-size:22px!important}.access-facts{grid-template-columns:1fr;margin:0 20px 20px}.access-facts>div{gap:4px;padding:13px 16px}.access-facts>div+div{border-left:0;border-top:1px solid var(--line)}.access-mode-action,.access-special-link{padding:20px;gap:16px}.access-mode-action .btn,.access-special-link .btn{width:100%;white-space:normal}.access-editor-grid{grid-template-columns:1fr;padding:20px}.site-control textarea{font-size:16px}.access-preview{padding:20px}.access-preview>.eyebrow{margin-bottom:20px}.access-overview{padding:20px;flex-direction:column;align-items:stretch;gap:18px}.access-overview h2{font-size:18px}.quiet-admin .topbar .admin-access-link{display:none}.pause-admin-actions{align-items:stretch}.pause-admin-actions .btn{flex:1 1 150px;min-height:44px}.access-confirm .row{flex-wrap:wrap}.access-confirm .btn{flex:1;white-space:normal}}
+
+.access-ips{padding:24px 28px;border-top:1px solid var(--line)}
+.access-ips>p{margin:0;line-height:1.6}
+.access-ip-form{display:grid;grid-template-columns:minmax(0,360px) auto;gap:12px;justify-content:start;align-items:end;margin-top:16px}
+.site-control .access-ip-form .form-field{margin:0}
+.access-ip-form input{min-width:0;width:100%}
+.access-ip-form .btn{min-height:40px}
+.access-ip-list{list-style:none;padding:0;margin:16px 0 0}
+.access-ip-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:52px;padding:8px 0;border-bottom:1px solid var(--line)}
+.access-ip-list code{font-size:13px;overflow-wrap:anywhere}
+.access-ip-list .btn{flex-shrink:0}
+.access-ips .access-ip-feedback{font-size:12px;color:var(--muted);margin:12px 0 0}
+.access-ip-feedback:empty{display:none}
+.access-ips [data-retry]{margin-top:10px}
+@media(max-width:760px){.access-ips{padding:20px}.access-ip-form{grid-template-columns:1fr;justify-content:stretch}.access-ip-form input{font-size:16px}}
