@@ -118,6 +118,23 @@ body[data-page="chats"]:not(.awaiting-access) .content {
 .chat-inputrow button { width:38px; height:38px; background:#e5a084; color:#241a15; border-radius:11px; }
 .chat-inputrow button .icon { transform:rotate(-90deg); }
 .chat-inputrow button:disabled { opacity:1; background:#403d39; color:#aca59e; }
+@media(min-width:901px) {
+  .shell:has(.chats[data-screen=inbox]) { height:100dvh; }
+  .shell:has(.chats[data-screen=inbox]) > .topbar { flex-shrink:0; }
+  .shell:has(.chats[data-screen=inbox]) > footer { display:none; }
+  body[data-page="chats"]:not(.awaiting-access) .content:has(.chats[data-screen=inbox]) {
+    display:grid;
+    grid-template-rows:minmax(0,1fr);
+    min-height:320px;
+    max-width:none;
+    padding:clamp(16px,2.5vh,28px) clamp(20px,2vw,36px);
+  }
+  .chats[data-screen=inbox] { min-height:0; }
+  .chat-work { height:100%; }
+  .chat-thread { --chat-gutter:clamp(18px,2vw,32px); }
+  .chat-threadhead,.chat-log,.chat-compose { padding-inline:var(--chat-gutter); }
+  .chat-posts,.chat-compose { width:100%; }
+}
 @media(max-width:900px) {
   .chat-work { height:clamp(340px,calc(100dvh - 189px - env(safe-area-inset-bottom)),820px); }
 }
