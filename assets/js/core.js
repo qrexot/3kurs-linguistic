@@ -5,6 +5,7 @@ window.App = (() => {
  const icons={
   claude:'<g fill="currentColor"><rect x="10.2" y="2" width="3.6" height="20" rx="1.8"/><rect x="10.2" y="2" width="3.6" height="20" rx="1.8" transform="rotate(45 12 12)"/><rect x="10.2" y="2" width="3.6" height="20" rx="1.8" transform="rotate(90 12 12)"/><rect x="10.2" y="2" width="3.6" height="20" rx="1.8" transform="rotate(135 12 12)"/></g>',
   shield:'<path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6Z"/><path d="m9 12 2 2 4-4"/>',
+  chat:'<path d="M20.5 11.3a8.5 8.5 0 0 1-8.7 8.4 10 10 0 0 1-3.8-.8L3.5 20l1.1-4.2a8.3 8.3 0 0 1-1-4.1A8.4 8.4 0 0 1 12 3.5a8.3 8.3 0 0 1 8.5 7.8Z"/><path d="M8.5 10h7m-7 3.5h4"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   book:'<path d="M12 5v16M3 4c4-1 6-1 9 1 3-2 5-2 9-1v15c-4-1-6-1-9 1-3-2-5-2-9-1Z"/>',
   star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/>',

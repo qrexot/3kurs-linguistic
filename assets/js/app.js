@@ -6,9 +6,10 @@
   try{
    const u=new URL(urlStr,location.href),vp=u.searchParams.get('view');
    if(vp==='military')return {page:'library',params:u.searchParams};
-   if(vp&&['library','subjects','saved','reader','privacy'].includes(vp))return {page:vp,params:u.searchParams};
+   if(vp&&['library','subjects','saved','reader','privacy','chats'].includes(vp))return {page:vp,params:u.searchParams};
    const path=u.pathname.split('/').pop().toLowerCase();
    if(path==='subjects.html')return {page:'subjects',params:u.searchParams};
+   if(path==='chats.html')return {page:'chats',params:u.searchParams};
    if(path==='saved.html')return {page:'saved',params:u.searchParams};
    if(path==='lecture.html'||u.searchParams.has('id'))return {page:'reader',params:u.searchParams};
    if(path==='privacy.html')return {page:'privacy',params:u.searchParams};
@@ -27,25 +28,39 @@
  const favorites=()=>storage.get('lecture-favorites',[]);
  const sub=id=>subjects.find(s=>s.id===id)?.name||'Предмет';
  function updateChrome(p){
-  const titles={library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте'};
+  const titles={library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте',chats:'Чаты'};
   const b=document.querySelector('.topbar .crumb b');if(b)b.textContent=titles[p]||'Все лекции';
   document.querySelectorAll('.side-nav a, .mobile-nav a').forEach(a=>{
    const href=a.getAttribute('href')||'';
    const active=(p==='library'&&(href.includes('index.html')||href==='./'))||
                 (p==='reader'&&(href.includes('index.html')||href==='./'))||
                 (p==='subjects'&&href.includes('subjects.html'))||
-                (p==='saved'&&href.includes('saved.html'));
+                (p==='saved'&&href.includes('saved.html'))||(p==='chats'&&href.includes('chats.html'));
    a.classList.toggle('active',!!active);
    if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
   });
  }
  function shell(){
-  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['saved','saved.html','star','Избранное']];
+  const nav=[['library','index.html','grid','Все лекции'],['subjects','subjects.html','book','Предметы'],['saved','saved.html','star','Избранное'],['chats','chats.html','chat','Чаты']];
   const links=nav.map(([id,file,ic,label])=>{const on=page===id||(page==='reader'&&id==='library');return `<a href="${file}" class="${on?'active':''}" ${on?'aria-current="page"':''}>${icon(ic)}<span>${label}</span></a>`}).join('');
-  $('#app').innerHTML=`<a class="skip-link" href="#main">К материалам</a><aside class="sidebar"><a class="side-mark" href="index.html" aria-label="Материалы занятий"><div class="mark">${icon('sparkle')}</div><span>Материалы</span></a><div class="nav-label">БИБЛИОТЕКА</div><nav class="side-nav" aria-label="Основная навигация">${links}</nav><div class="side-bottom"><a href="privacy.html">О сайте ${icon("arrow")}</a></div></aside><div class="shell"><header class="topbar"><div class="crumb"><a class="crumb-root" href="index.html">Материалы</a> ${icon('chevron')} <b>${({library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте'})[page]}</b></div><div class="top-right"><a class="top-help" href="privacy.html">О сайте</a></div></header><main class="content" id="main" tabindex="-1">${UI.skeleton(page)}</main>${App.footer()}</div><nav class="mobile-nav" aria-label="Основная навигация на телефоне">${links}</nav>`;
+  $('#app').innerHTML=`<a class="skip-link" href="#main">К материалам</a><aside class="sidebar"><a class="side-mark" href="index.html" aria-label="Материалы занятий"><div class="mark">${icon('sparkle')}</div><span>Материалы</span></a><div class="nav-label">БИБЛИОТЕКА</div><nav class="side-nav" aria-label="Основная навигация">${links}</nav><div class="side-bottom"><a href="privacy.html">О сайте ${icon("arrow")}</a></div></aside><div class="shell"><header class="topbar"><div class="crumb"><a class="crumb-root" href="index.html">Материалы</a> ${icon('chevron')} <b>${({library:'Все лекции',subjects:'Предметы',saved:'Избранное',reader:'Чтение',privacy:'О сайте',chats:'Чаты'})[page]}</b></div><div class="top-right"><a class="top-help" href="privacy.html">О сайте</a></div></header><main class="content" id="main" tabindex="-1">${UI.skeleton(page)}</main>${App.footer()}</div><nav class="mobile-nav" aria-label="Основная навигация на телефоне">${links}</nav>`;
+ }
+ let catalogLoaded=false;
+ async function loadCatalog(){
+  if(catalogLoaded)return;
+  const loaded=await Promise.all([
+   DB.select('subjects','select=*&order=sort_order.asc,name.asc'),
+   DB.select('weeks','select=*&order=sort_order.desc,starts_on.desc'),
+   DB.select('lectures','select=id,subject_id,week_id,title,lecture_date,starts_at,pair_number,summary,lecture_text,full_text,assignment_text,extra_text,extra_images,published&published=eq.true&order=lecture_date.desc,starts_at.desc&limit=1000')
+  ]);
+  const [newSubs,newWks,newLecs]=loaded;
+  newLecs.sort((a,b)=>(b.lecture_date+(b.starts_at||'')).localeCompare(a.lecture_date+(a.starts_at||'')));
+  subjects=newSubs;weeks=newWks;lectures=newLecs;
+  catalogLoaded=true;
  }
  let isNavigating=false;
  async function navigateTo(href,{replace=false,pop=false}={}){
+  if(locked||!accessReady)return;
   const target=new URL(href,location.href);
   const resolved=resolvePage(target.href);
   const main=$('#main');
@@ -55,6 +70,7 @@
   }
   isNavigating=true;
   try{
+   if(page==='chats')Chats.close();
    if(page==='reader')UI.saveReader();
    else if(page==='library'||page==='saved')UI.saveList();
    if(!pop){
@@ -67,9 +83,12 @@
     main.classList.add('is-transitioning');
     await new Promise(r=>setTimeout(r,40));
    }
+   if(page!=='chats')await loadCatalog();
+   if(locked)return;
    if(page==='subjects')subjectPage();
    else if(page==='reader')await reader();
    else if(page==='privacy')await privacy();
+   else if(page==='chats')Chats.open($('#main'));
    else library();
    if(page==='library'||page==='saved')UI.restoreList();
    else if(page!=='reader')window.scrollTo({top:0,behavior:'instant'});
@@ -83,7 +102,7 @@
   }
  }
  function fail(e){document.documentElement.classList.remove('access-boot');if(window.VisitorAccess&&/visitor_access_status|submit_access_request/.test(e.message))e=new Error(VisitorAccess.error(e));$('#main').innerHTML=empty(e.message==='blocked'?'Доступ ограничен':'Не удалось открыть материалы',errorText(e),`<button class="btn primary" id="retry">Попробовать снова</button>`);$('#retry')?.addEventListener('click',()=>location.reload())}
- function lock(){try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null;$('#main').innerHTML=empty('Доступ ограничен','Владелец ограничил доступ для этого посетителя.');document.title='Доступ ограничен'}
+ function lock(){Chats.close();try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null;$('#main').innerHTML=empty('Доступ ограничен','Владелец ограничил доступ для этого посетителя.');document.title='Доступ ограничен'}
  function meta(l){const values=[l.lecture_date?new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric'}).format(new Date(l.lecture_date+'T12:00:00')):'Без даты',l.pair_number?`${l.pair_number}-я пара`:'',l.starts_at?l.starts_at.slice(0,5):''].filter(Boolean);return `<div class="lecture-meta" aria-label="Дата и время занятия">${values.map(value=>`<span>${esc(value)}</span>`).join('<span class="sep" aria-hidden="true">·</span>')}</div>`}
  const normalizeSearch=t=>String(t||'').toLocaleLowerCase('ru').replace(/ё/g,'е');
  function cleanText(t){return (t||'').replace(/:::[\w-]*|[#*`~>|_=-]/g,' ').replace(/\s+/g,' ')}
@@ -446,7 +465,7 @@
 
  }
 
- window.addEventListener('site-paused',()=>{locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null});
+ window.addEventListener('site-paused',()=>{Chats.close();locked=true;clearInterval(poll);clearInterval(tracking);lectures=[];current=null});
  const availabilityReady=SiteAvailability.start();
 
  shell();
@@ -466,14 +485,7 @@
   if(locked)return;
   accessReady=true;
 
-  const loaded=await Promise.all([
-   DB.select('subjects','select=*&order=sort_order.asc,name.asc'),
-   DB.select('weeks','select=*&order=sort_order.desc,starts_on.desc'),
-   DB.select('lectures','select=id,subject_id,week_id,title,lecture_date,starts_at,pair_number,summary,lecture_text,full_text,assignment_text,extra_text,extra_images,published&published=eq.true&order=lecture_date.desc,starts_at.desc&limit=1000')
-  ]);
-  const [newSubs,newWks,newLecs]=loaded;
-  newLecs.sort((a,b)=>(b.lecture_date+(b.starts_at||'')).localeCompare(a.lecture_date+(a.starts_at||'')));
-  subjects=newSubs;weeks=newWks;lectures=newLecs;
+  if(page!=='chats')await loadCatalog();
   // Do not persist lecture text in browser storage.
 
 
@@ -486,6 +498,7 @@
    if(page==='subjects')subjectPage();
    else if(page==='reader')await reader();
    else if(page==='privacy')await privacy();
+   else if(page==='chats')Chats.open($('#main'));
    else library();
    document.body.classList.remove('awaiting-access');document.documentElement.classList.remove('access-boot');
    UI.ready();
@@ -519,7 +532,7 @@
    if(curDir!==targetDir)return;
   }
   if(target.pathname.includes('/admin/'))return;
-  const isAppUrl=/index\.html|lecture\.html|subjects\.html|saved\.html|privacy\.html|^(\/[^.]*)?$/.test(target.pathname);
+  const isAppUrl=/index\.html|lecture\.html|subjects\.html|saved\.html|privacy\.html|chats\.html|^(\/[^.]*)?$/.test(target.pathname);
   if(!isAppUrl)return;
   ev.preventDefault();
   navigateTo(target.href);
@@ -530,7 +543,7 @@
   navigateTo(location.href,{pop:true});
  });
 
- window.addEventListener('session-lost',()=>{try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');subjects=[];weeks=[];lectures=[];current=null;locked=true;clearInterval(poll);clearInterval(tracking);$('#main').innerHTML=empty('Сессия завершена','Обновите страницу, чтобы снова открыть материалы.','<button class="btn" onclick="location.reload()">Обновить</button>')});
+ window.addEventListener('session-lost',()=>{Chats.close();try{sessionStorage.removeItem(CATALOG_CACHE)}catch{}document.body.classList.add('awaiting-access');subjects=[];weeks=[];lectures=[];current=null;locked=true;clearInterval(poll);clearInterval(tracking);$('#main').innerHTML=empty('Сессия завершена','Обновите страницу, чтобы снова открыть материалы.','<button class="btn" onclick="location.reload()">Обновить</button>')});
  window.addEventListener('offline',()=>toast('Нет интернета. Новые материалы пока не загрузятся.'));
 })();
 
