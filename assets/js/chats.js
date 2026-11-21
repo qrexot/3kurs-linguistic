@@ -37,6 +37,33 @@ window.Chats = (() => {
     const $ = selector => root.querySelector(selector);
     let active = true, timer, me, room, threads = [], lastList = '';
     const drafts = new Map();
+    const phone = matchMedia('(max-width:720px), (max-width:960px) and (max-height:540px) and (pointer:coarse)');
+    const viewport = window.visualViewport;
+    const host = main.closest('#app');
+    const chatRoute = location.pathname + location.search;
+    function fitViewport() {
+      if (phone.matches && viewport && viewport.scale === 1) {
+        host.style.setProperty('--chat-visible-height', viewport.height + 'px');
+        host.style.setProperty('--chat-visible-top', viewport.offsetTop + 'px');
+      } else {
+        host.style.removeProperty('--chat-visible-height');
+        host.style.removeProperty('--chat-visible-top');
+      }
+    }
+    function showList() {
+      root.dataset.pane = 'list';
+      $('.chat-row[aria-current=true]')?.focus({preventScroll:true});
+    }
+    function restorePane() {
+      if (!room || !phone.matches || location.pathname + location.search !== chatRoute) return;
+      const peer = history.state?.chatPeer;
+      if (typeof peer === 'string') select(peer || null, null, false);
+      else showList();
+    }
+    function backToList() {
+      if (typeof history.state?.chatPeer === 'string') history.back();
+      else showList();
+    }
     const visible = () => { if (!document.hidden && room) sync(room); };
     document.addEventListener('visibilitychange', visible);
     window.addEventListener('online', visible);
@@ -45,6 +72,12 @@ window.Chats = (() => {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', visible);
       window.removeEventListener('online', visible);
+      window.removeEventListener('popstate', restorePane);
+      viewport?.removeEventListener('resize', fitViewport);
+      viewport?.removeEventListener('scroll', fitViewport);
+      phone.removeEventListener('change', fitViewport);
+      host.style.removeProperty('--chat-visible-height');
+      host.style.removeProperty('--chat-visible-top');
       root.remove();
     };
 
@@ -109,7 +142,7 @@ window.Chats = (() => {
       root.dataset.screen = 'inbox';
       root.innerHTML = `<div class="chat-work"><aside class="chat-side" aria-label="Список чатов">
         <div class="chat-sidehead"><h1>Чаты</h1><form class="chat-search">${icon('search')}
-        <label class="sr-only" for="chat-peer">Юзернейм собеседника</label><input id="chat-peer" required maxlength="21" placeholder="Найти по юзернейму" autocomplete="off" autocapitalize="none" spellcheck="false"><button type="submit" title="Открыть личную переписку" aria-label="Открыть личную переписку">${icon('arrow')}</button></form>
+        <label class="sr-only" for="chat-peer">Юзернейм собеседника</label><input id="chat-peer" enterkeyhint="go" required maxlength="21" placeholder="Найти по юзернейму" autocomplete="off" autocapitalize="none" spellcheck="false"><button type="submit" title="Открыть личную переписку" aria-label="Открыть личную переписку">${icon('arrow')}</button></form>
         <p class="chat-error chat-search-error" role="alert"></p></div>
         <div class="chat-rooms"></div>
         <div class="chat-identity">${avatar(me)}<div><small>Мой профиль</small><strong>@${esc(me)}</strong></div></div>
@@ -123,7 +156,7 @@ window.Chats = (() => {
         $('.chat-search-error').textContent = '';
         try {
           const rows = await DB.rpc('chat_feed', {p_peer:peer});
-          if (active) { input.value = ''; select(peer, rows); }
+          if (active) { input.value = ''; input.blur(); select(peer, rows); }
         } catch (e) { if (active) $('.chat-search-error').textContent = explain(e); }
         finally { searchButton.disabled = false; }
       };
@@ -131,8 +164,14 @@ window.Chats = (() => {
         const button = event.target.closest('[data-room]');
         if (button) select(button.dataset.room || null);
       };
-      select(null);
-      if (matchMedia('(max-width:720px)').matches) root.dataset.pane = 'list';
+      fitViewport();
+      viewport?.addEventListener('resize', fitViewport);
+      viewport?.addEventListener('scroll', fitViewport);
+      phone.addEventListener('change', fitViewport);
+      window.addEventListener('popstate', restorePane);
+      const initialPeer = phone.matches ? history.state?.chatPeer : null;
+      select(initialPeer || null, null, false);
+      if (phone.matches && typeof initialPeer !== 'string') root.dataset.pane = 'list';
       timer = setInterval(visible, 4000);
     }
 
@@ -140,18 +179,23 @@ window.Chats = (() => {
       const item = (peer, preview, sentAt) => {
         const title = peer ? '@' + peer : 'Общий чат';
         return `<button type="button" data-room="${esc(peer || '')}" class="chat-row" aria-current="${room.peer === peer}">
-          ${avatar(peer)}<span class="chat-row-text"><b>${esc(title)}</b><small>${esc(preview)}</small></span>${sentAt ? `<time>${App.date(sentAt)}</time>` : ''}</button>`;
+          ${avatar(peer)}<span class="chat-row-text"><b>${esc(title)}</b><small>${esc(preview)}</small></span>${sentAt ? `<time datetime="${esc(sentAt)}">${new Date(sentAt).toDateString() === new Date().toDateString() ? clock.format(new Date(sentAt)) : App.date(sentAt)}</time>` : ''}</button>`;
       };
       let rows = threads;
       if (room.peer && !rows.some(t => t.peer === room.peer)) rows = [{peer:room.peer,preview:'Новая переписка'}, ...rows];
-      const html = item(null, 'Все участники курса') + '<h3>Личные сообщения</h3>' + (rows.length ? rows.map(t => item(t.peer,t.preview,t.sent_at)).join('') : '<p class="chat-note">Введите @юзернейм в поиске, чтобы начать переписку.</p>');
+      const html = item(null, 'Все участники курса') + '<h3>Личные сообщения</h3>' + (rows.length ? rows.map(t => item(t.peer,t.preview,t.sent_at)).join('') : `<div class="chat-note"><span class="chat-note-icon" aria-hidden="true">${icon('chat')}</span><p>Введите @юзернейм в поиске, чтобы начать переписку.</p></div>`);
       if (lastList !== html) {
         $('.chat-rooms').innerHTML = html;
         lastList = html;
       }
     }
 
-    function select(peer, initial) {
+    function select(peer, initial, remember = true) {
+      if (phone.matches && remember) {
+        const next = {...history.state, chatPeer:peer || ''};
+        if (typeof history.state?.chatPeer === 'string') history.replaceState(next, '');
+        else history.pushState(next, '');
+      }
       const state = {peer, posts:[], loaded:false, older:false, pending:false, syncing:false};
       room = state;
       const name = peer ? '@' + peer : 'Общий чат';
@@ -161,6 +205,9 @@ window.Chats = (() => {
         <div class="chat-log" tabindex="0" aria-label="История сообщений"><button type="button" class="chat-older chat-link" hidden>Предыдущие сообщения</button><div class="chat-posts"></div></div>
         <form class="chat-compose"><p class="chat-feedback" role="status"></p><div class="chat-inputrow"><textarea rows="1" maxlength="2000" aria-label="Сообщение" placeholder="${peer ? 'Сообщение для @' + esc(peer) : 'Сообщение в общий чат'}"></textarea><button type="submit" aria-label="Отправить сообщение" title="Отправить сообщение">${icon('arrow')}</button></div></form>`;
       const form = $('.chat-compose'), field = $('textarea');
+      form.addEventListener('pointerdown', e => {
+        if (e.target.closest('button') && document.activeElement === field) e.preventDefault();
+      });
       field.value = drafts.get(peer)?.text || '';
       const button = form.querySelector('button');
       const update = () => {
@@ -188,7 +235,7 @@ window.Chats = (() => {
         } catch (err) { if (active && room === state) $('.chat-feedback').textContent = explain(err); }
         finally { state.pending = false; update(); }
       };
-      $('.chat-back').onclick = () => { root.dataset.pane = 'list'; $('.chat-row[aria-current=true]')?.focus(); };
+      $('.chat-back').onclick = backToList;
       $('.chat-older').onclick = () => older(state);
       $('.chat-posts').onclick = e => {
         const author = e.target.closest('[data-author]');
