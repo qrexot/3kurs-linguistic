@@ -14,6 +14,12 @@ window.Chats = (() => {
   const explain = error => errors[error.message] || App.errorText(error);
   const clock = new Intl.DateTimeFormat('ru', {hour:'2-digit', minute:'2-digit'});
   const calendar = new Intl.DateTimeFormat('ru', {day:'numeric', month:'long', year:'numeric'});
+  function avatar(handle) {
+    if (!handle) return '<span class="chat-avatar channel" aria-hidden="true">#</span>';
+    const tones = ['sand','sage','iris','blue'];
+    const tone = tones[Array.from(handle).reduce((sum,c) => sum + c.charCodeAt(0),0) % tones.length];
+    return `<span class="chat-avatar ${tone}" aria-hidden="true">${esc(handle.slice(0,2).toUpperCase())}</span>`;
+  }
   let dispose;
 
   function close() {
@@ -42,21 +48,50 @@ window.Chats = (() => {
       root.remove();
     };
 
-    function onboarding(restore = false) {
+    function onboarding(restore = false, handle = '') {
       const secret = crypto.randomUUID().replaceAll('-', '');
-      root.innerHTML = `<h1>Чаты</h1><div class="chat-welcome"><div class="chat-intro"><span class="chat-emblem">${icon('chat')}</span>
-        <h2>Переписка курса</h2><p>Обсуждайте занятия в общем чате или напишите одногруппнику лично.</p></div>
-        <form class="chat-signup"><h3>${restore ? 'Восстановление профиля' : 'Ваш профиль'}</h3>
-        <label>Юзернейм<input name="handle" required minlength="3" maxlength="20" pattern="[A-Za-z][A-Za-z0-9_]{2,19}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="например, leonard"></label>
-        <p class="chat-hint">От 3 до 20 знаков. Первая — латинская буква. Юзернейм закрепляется навсегда.</p>
-        ${restore ? '<label>Код восстановления<input name="secret" required autocomplete="off" autocapitalize="none" spellcheck="false"></label>' :
-        `<label>Код восстановления<input name="secret" class="chat-code" readonly value="${secret}"></label><p class="chat-hint">Сохраните код в личном месте. Он открывает доступ к перепискам на новом устройстве.</p>
-        <label class="chat-check"><input type="checkbox" required> Я сохранил код</label>`}
-        <p class="chat-error" role="alert"></p><button class="btn primary" type="submit">${restore ? 'Восстановить доступ' : 'Закрепить юзернейм'}</button>
-        <button type="button" class="chat-link" data-switch>${restore ? 'Создать профиль' : 'У меня уже есть профиль'}</button></form></div>`;
-      $('[data-switch]').onclick = () => onboarding(!restore);
+      root.dataset.screen = 'account';
+      root.innerHTML = `<div class="chat-welcome">
+        <header class="chat-intro"><span class="chat-emblem">${icon('chat')}</span><h1>${restore ? 'Вернуться в чаты' : 'Профиль для чатов'}</h1>
+        <p>${restore ? 'Введите данные своего профиля, чтобы открыть переписки.' : 'Выберите имя для общего чата и личных сообщений.'}</p></header>
+        <form class="chat-signup">
+          <div class="chat-field"><label for="chat-handle">Юзернейм</label>
+            <div class="chat-control"><span aria-hidden="true">@</span><input id="chat-handle" name="handle" required minlength="3" maxlength="20" pattern="[A-Za-z][A-Za-z0-9_]{2,19}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ваше имя латиницей" value="${esc(handle)}" aria-describedby="chat-name-help"></div>
+            <p class="chat-hint" id="chat-name-help">${restore ? 'Тот же юзернейм, что и при регистрации.' : 'От 3 до 20 символов: латинские буквы, цифры и _. Имя выбирается один раз.'}</p>
+          </div>
+          ${restore ? `<div class="chat-field"><label for="chat-key">Код восстановления</label><div class="chat-control"><input id="chat-key" type="password" name="secret" required autocomplete="off" spellcheck="false" placeholder="Вставьте сохранённый код"></div></div>` :
+          `<div class="chat-keybox"><div class="chat-key-title">${icon('lock')}<label for="chat-key">Код восстановления</label></div>
+          <p class="chat-hint">Сохраните для входа с другого устройства.</p>
+          <div class="chat-keyrow"><input id="chat-key" name="secret" type="password" readonly value="${secret}" autocomplete="off">
+            <button type="button" class="chat-tool" data-reveal aria-label="Показать код" title="Показать код" aria-pressed="false">Показать</button>
+            <button type="button" class="chat-copy" data-copy>Копировать</button></div>
+          <span class="chat-hint" role="status" data-copy-status></span>
+          <label class="chat-check"><input type="checkbox" required> Я сохранил код</label></div>`}
+          <p class="chat-error" role="alert"></p><button class="chat-primary" type="submit">${restore ? 'Восстановить доступ' : 'Создать профиль'} ${icon('arrow')}</button>
+          <button type="button" class="chat-link" data-switch>${restore ? 'Создать новый профиль' : 'У меня уже есть профиль'}</button>
+        </form></div>`;
       const form = $('form');
-      if (!restore) form.elements.secret.onclick = () => form.elements.secret.select();
+      $('[data-switch]').onclick = () => onboarding(!restore, form.elements.handle.value);
+      if (!restore) {
+        const field = form.elements.secret, reveal = $('[data-reveal]');
+        function show(showCode) {
+          field.type = showCode ? 'text' : 'password';
+          reveal.textContent = showCode ? 'Скрыть' : 'Показать';
+          reveal.setAttribute('aria-pressed',String(showCode));
+          reveal.setAttribute('aria-label',reveal.title = reveal.textContent + ' код');
+        }
+        reveal.onclick = () => show(field.type === 'password');
+        $('[data-copy]').onclick = async () => {
+          const status = $('[data-copy-status]');
+          try {
+            await navigator.clipboard.writeText(field.value);
+            status.textContent = 'Код скопирован';
+          } catch {
+            show(true); field.focus(); field.select();
+            status.textContent = 'Код выделен. Скопируйте его вручную.';
+          }
+        };
+      }
       form.onsubmit = async event => {
         event.preventDefault();
         const button = form.querySelector('[type=submit]');
@@ -71,11 +106,14 @@ window.Chats = (() => {
     }
 
     function workspace() {
-      root.innerHTML = `<header class="chat-pagehead"><h1>Чаты</h1><span class="chat-identity">@${esc(me)}</span></header>
-        <div class="chat-work"><aside class="chat-side" aria-label="Список чатов"><h2>Переписки</h2>
-        <form class="chat-search"><label class="sr-only" for="chat-peer">Юзернейм собеседника</label><input id="chat-peer" required maxlength="21" placeholder="@юзернейм" autocomplete="off" autocapitalize="none" spellcheck="false"><button type="submit" aria-label="Открыть личную переписку">${icon('arrow')}</button></form>
-        <p class="chat-error chat-search-error" role="alert"></p>
-        <div class="chat-rooms"></div></aside><section class="chat-thread" aria-label="Переписка"></section></div>`;
+      root.dataset.screen = 'inbox';
+      root.innerHTML = `<div class="chat-work"><aside class="chat-side" aria-label="Список чатов">
+        <div class="chat-sidehead"><h1>Чаты</h1><form class="chat-search">${icon('search')}
+        <label class="sr-only" for="chat-peer">Юзернейм собеседника</label><input id="chat-peer" required maxlength="21" placeholder="Найти по юзернейму" autocomplete="off" autocapitalize="none" spellcheck="false"><button type="submit" title="Открыть личную переписку" aria-label="Открыть личную переписку">${icon('arrow')}</button></form>
+        <p class="chat-error chat-search-error" role="alert"></p></div>
+        <div class="chat-rooms"></div>
+        <div class="chat-identity">${avatar(me)}<div><small>Мой профиль</small><strong>@${esc(me)}</strong></div></div>
+        </aside><section class="chat-thread" aria-label="Переписка"></section></div>`;
       $('.chat-search').onsubmit = async event => {
         event.preventDefault();
         const input = $('#chat-peer'), peer = input.value.trim().replace(/^@/,'').toLowerCase();
@@ -94,18 +132,19 @@ window.Chats = (() => {
         if (button) select(button.dataset.room || null);
       };
       select(null);
+      if (matchMedia('(max-width:720px)').matches) root.dataset.pane = 'list';
       timer = setInterval(visible, 4000);
     }
 
     function list() {
-      const item = (peer, preview) => {
+      const item = (peer, preview, sentAt) => {
         const title = peer ? '@' + peer : 'Общий чат';
         return `<button type="button" data-room="${esc(peer || '')}" class="chat-row" aria-current="${room.peer === peer}">
-          <span class="chat-avatar">${peer ? esc(peer[0].toUpperCase()) : icon('users')}</span><span class="chat-row-text"><b>${esc(title)}</b><small>${esc(preview)}</small></span></button>`;
+          ${avatar(peer)}<span class="chat-row-text"><b>${esc(title)}</b><small>${esc(preview)}</small></span>${sentAt ? `<time>${App.date(sentAt)}</time>` : ''}</button>`;
       };
       let rows = threads;
       if (room.peer && !rows.some(t => t.peer === room.peer)) rows = [{peer:room.peer,preview:'Новая переписка'}, ...rows];
-      const html = item(null, 'Весь курс') + '<h3>Личные сообщения</h3>' + (rows.length ? rows.map(t => item(t.peer,t.preview)).join('') : '<p class="chat-note">Здесь появятся ваши переписки.</p>');
+      const html = item(null, 'Все участники курса') + '<h3>Личные сообщения</h3>' + (rows.length ? rows.map(t => item(t.peer,t.preview,t.sent_at)).join('') : '<p class="chat-note">Введите @юзернейм в поиске, чтобы начать переписку.</p>');
       if (lastList !== html) {
         $('.chat-rooms').innerHTML = html;
         lastList = html;
@@ -118,13 +157,17 @@ window.Chats = (() => {
       const name = peer ? '@' + peer : 'Общий чат';
       root.dataset.pane = 'thread';
       $('.chat-thread').innerHTML = `<header class="chat-threadhead"><button class="chat-back" type="button" aria-label="К списку переписок">${icon('back')}</button>
-        <span class="chat-avatar">${peer ? esc(peer[0].toUpperCase()) : icon('users')}</span><div><h2>${esc(name)}</h2><small>${peer ? 'Личная переписка' : 'Для всех участников курса'}</small></div></header>
+        ${avatar(peer)}<div><h2>${esc(name)}</h2><small>${peer ? 'Личная переписка' : '3 курс · Лингвистика'}</small></div></header>
         <div class="chat-log" tabindex="0" aria-label="История сообщений"><button type="button" class="chat-older chat-link" hidden>Предыдущие сообщения</button><div class="chat-posts"></div></div>
-        <form class="chat-compose"><p class="chat-feedback" role="status"></p><div class="chat-inputrow"><textarea rows="1" maxlength="2000" aria-label="Сообщение" placeholder="Написать сообщение…"></textarea><button type="submit" aria-label="Отправить сообщение">${icon('arrow')}</button></div></form>`;
+        <form class="chat-compose"><p class="chat-feedback" role="status"></p><div class="chat-inputrow"><textarea rows="1" maxlength="2000" aria-label="Сообщение" placeholder="${peer ? 'Сообщение для @' + esc(peer) : 'Сообщение в общий чат'}"></textarea><button type="submit" aria-label="Отправить сообщение" title="Отправить сообщение">${icon('arrow')}</button></div></form>`;
       const form = $('.chat-compose'), field = $('textarea');
       field.value = drafts.get(peer)?.text || '';
       const button = form.querySelector('button');
-      const update = () => { button.disabled = !field.value.trim() || state.pending; };
+      const update = () => {
+        button.disabled = !field.value.trim() || state.pending;
+        field.style.height = 'auto';
+        if (field.value) field.style.height = Math.min(field.scrollHeight, 120) + 'px';
+      };
       field.oninput = () => { drafts.set(peer, {text:field.value,nonce:crypto.randomUUID()}); update(); };
       update();
       field.onkeydown = e => {
@@ -145,7 +188,7 @@ window.Chats = (() => {
         } catch (err) { if (active && room === state) $('.chat-feedback').textContent = explain(err); }
         finally { state.pending = false; update(); }
       };
-      $('.chat-back').onclick = () => { root.dataset.pane = 'list'; $('#chat-peer').focus(); };
+      $('.chat-back').onclick = () => { root.dataset.pane = 'list'; $('.chat-row[aria-current=true]')?.focus(); };
       $('.chat-older').onclick = () => older(state);
       $('.chat-posts').onclick = e => {
         const author = e.target.closest('[data-author]');
@@ -166,7 +209,7 @@ window.Chats = (() => {
         const author = !state.peer && !mine ? `<button type="button" data-author="${esc(p.sender)}">@${esc(p.sender)}</button>` : '';
         return `${divider}<article class="chat-post ${mine ? 'mine' : ''}">${author}<p>${esc(p.body)}</p><time datetime="${esc(p.sent_at)}">${clock.format(time)}</time></article>`;
       }).join('');
-      $('.chat-posts').innerHTML = html || `<div class="chat-empty">${icon(state.peer ? 'lock' : 'chat')}<h3>${state.peer ? 'Начните переписку' : 'Пока нет сообщений'}</h3><p>${state.peer ? 'Ваше сообщение увидит @' + esc(state.peer) + '.' : 'Напишите первое сообщение курсу.'}</p></div>`;
+      $('.chat-posts').innerHTML = html || `<div class="chat-empty"><div class="chat-art" aria-hidden="true"><span class="chat-art-back"></span><span class="chat-art-front"><i></i><i></i><i></i></span></div><h3>${state.peer ? 'Начните переписку' : 'Начните обсуждение'}</h3><p>${state.peer ? 'Отправьте первое сообщение @' + esc(state.peer) + '.' : 'Задайте вопрос или поделитесь новостью с курсом.'}</p></div>`;
       $('.chat-older').hidden = !state.older;
     }
 
