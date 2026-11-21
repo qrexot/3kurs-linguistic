@@ -2,6 +2,14 @@
 window.Chats = (() => {
   const {esc, icon} = App;
   const errors = {
+    chat_banned:'Доступ к чатам заблокирован.',
+    chat_muted:'Администратор временно ограничил отправку сообщений.',
+    group_muted:'Вам временно запрещено писать в этой группе.',
+    group_unavailable:'Группа больше недоступна.',
+    group_forbidden:'Для этого действия нужны другие права.',
+    member_banned:'Сначала снимите бан участника.',
+    unknown_member:'Участник уже покинул группу.',
+    invalid_title:'Введите название группы длиной до 64 символов.',
     handle_taken: 'Этот юзернейм уже занят. Попробуйте другой.',
     handle_fixed: 'За аккаунтом уже закреплён юзернейм. Откройте чаты заново.',
     invalid_code: 'Проверьте юзернейм и код восстановления.',
@@ -14,12 +22,6 @@ window.Chats = (() => {
   const explain = error => errors[error.message] || App.errorText(error);
   const clock = new Intl.DateTimeFormat('ru', {hour:'2-digit', minute:'2-digit'});
   const calendar = new Intl.DateTimeFormat('ru', {day:'numeric', month:'long', year:'numeric'});
-  function avatar(handle) {
-    if (!handle) return '<span class="chat-avatar channel" aria-hidden="true">#</span>';
-    const tones = ['sand','sage','iris','blue'];
-    const tone = tones[Array.from(handle).reduce((sum,c) => sum + c.charCodeAt(0),0) % tones.length];
-    return `<span class="chat-avatar ${tone}" aria-hidden="true">${esc(handle.slice(0,2).toUpperCase())}</span>`;
-  }
   let dispose;
 
   function close() {
@@ -36,6 +38,35 @@ window.Chats = (() => {
     main.replaceChildren(root);
     const $ = selector => root.querySelector(selector);
     let active = true, timer, me, room, threads = [], lastList = '';
+    const avatars = new Map();
+    let groups = [], controls;
+    const isGroup = key => typeof key === 'string' && key.startsWith('~');
+    const groupFor = key => groups.find(g => g.key === key);
+    function avatar(handle) {
+      if (!handle) return '<span class="chat-avatar channel" aria-hidden="true">#</span>';
+      if (isGroup(handle)) return '<span class="chat-avatar channel" aria-hidden="true">'+icon('users')+'</span>';
+      const id=avatars.get(handle);
+      const picture=id ? `<img src="assets/avatars/${id}.webp" alt="">` : esc(handle.slice(0,2).toUpperCase());
+      const tones = ['sand','sage','iris','blue'];
+      const tone = tones[Array.from(handle).reduce((sum,c) => sum + c.charCodeAt(0),0) % tones.length];
+      return `<span class="chat-avatar ${tone}" data-handle="${esc(handle)}" data-picture="${id||0}" aria-hidden="true">${picture}</span>`;
+    }
+    function repaintAvatars() {
+      for (const el of root.querySelectorAll('.chat-avatar[data-handle]')) {
+        if (Number(el.dataset.picture)!==(avatars.get(el.dataset.handle)||0)) el.outerHTML=avatar(el.dataset.handle);
+      }
+    }
+    async function fetchAvatars(state) {
+      const names=[...new Set([...root.querySelectorAll('.chat-avatar[data-handle]')].map(el=>el.dataset.handle))];
+      for(let i=0;i<names.length;i+=500) {
+        const revision=avatarRevision;
+        const result=await DB.rpc('chat_avatars',{p_handles:names.slice(i,i+500)});
+        if (!active || state!==room || revision!==avatarRevision) return;
+        Object.entries(result||{}).forEach(([key,id])=>avatars.set(key,id));
+      }
+      repaintAvatars();
+    }
+    let avatarRevision=0;
     const drafts = new Map();
     const phone = matchMedia('(max-width:720px), (max-width:960px) and (max-height:540px) and (pointer:coarse)');
     const viewport = window.visualViewport;
@@ -145,12 +176,18 @@ window.Chats = (() => {
         <label class="sr-only" for="chat-peer">Юзернейм собеседника</label><input id="chat-peer" enterkeyhint="go" required maxlength="21" placeholder="Найти по юзернейму" autocomplete="off" autocapitalize="none" spellcheck="false"><button type="submit" title="Открыть личную переписку" aria-label="Открыть личную переписку">${icon('arrow')}</button></form>
         <p class="chat-error chat-search-error" role="alert"></p></div>
         <div class="chat-rooms"></div>
-        <div class="chat-identity">${avatar(me)}<div><small>Мой профиль</small><strong>@${esc(me)}</strong></div></div>
+        <button type="button" class="chat-identity" title="Выбрать аватар" aria-label="Выбрать аватар профиля">${avatar(me)}<span><small>Мой профиль</small><strong>@${esc(me)}</strong></span></button>
         </aside><section class="chat-thread" aria-label="Переписка"></section></div>`;
+      controls=ChatControls.create({root,me,avatar,avatars,explain,
+        onAvatar:id=>{avatarRevision++;avatars.set(me,id);repaintAvatars();},
+        onGroup:g=>{if(!active)return;groups=[g,...groups];select(g.key);controls.people(g);},
+        onChange:(key,exited)=>{if(!active)return;if(exited)removeGroup(key);else if(room)sync(room);}
+      });
+      $('.chat-identity').onclick=controls.pickAvatar;
       $('.chat-search').onsubmit = async event => {
         event.preventDefault();
         const input = $('#chat-peer'), peer = input.value.trim().replace(/^@/,'').toLowerCase();
-        if (!peer) return;
+        if (!/^[a-z][a-z0-9_]{2,19}$/.test(peer)) { $('.chat-search-error').textContent=errors.invalid_handle; return; }
         const searchButton = event.currentTarget.querySelector('button');
         searchButton.disabled = true;
         $('.chat-search-error').textContent = '';
@@ -161,6 +198,7 @@ window.Chats = (() => {
         finally { searchButton.disabled = false; }
       };
       $('.chat-rooms').onclick = event => {
+        if (event.target.closest('[data-new-group]')) {controls.newGroup();return;}
         const button = event.target.closest('[data-room]');
         if (button) select(button.dataset.room || null);
       };
@@ -175,15 +213,30 @@ window.Chats = (() => {
       timer = setInterval(visible, 4000);
     }
 
+    function rolesLabel(role) {
+      return ({owner:'Ваша группа',admin:'Вы администратор',member:'Групповой чат'})[role];
+    }
+    function removeGroup(key) {
+      drafts.delete(key);groups=groups.filter(g=>g.key!==key);
+      root.querySelector('.chat-sheet')?.remove();
+      if(room.peer===key){
+        select(null,null,false);
+        if(phone.matches){
+          if(typeof history.state?.chatPeer==='string') history.back();
+          showList();
+        }
+      }
+      list();
+    }
     function list() {
       const item = (peer, preview, sentAt) => {
-        const title = peer ? '@' + peer : 'Общий чат';
+        const title = isGroup(peer) ? groupFor(peer)?.title || 'Группа' : peer ? '@' + peer : 'Общий чат';
         return `<button type="button" data-room="${esc(peer || '')}" class="chat-row" aria-current="${room.peer === peer}">
           ${avatar(peer)}<span class="chat-row-text"><b>${esc(title)}</b><small>${esc(preview)}</small></span>${sentAt ? `<time datetime="${esc(sentAt)}">${new Date(sentAt).toDateString() === new Date().toDateString() ? clock.format(new Date(sentAt)) : App.date(sentAt)}</time>` : ''}</button>`;
       };
       let rows = threads;
-      if (room.peer && !rows.some(t => t.peer === room.peer)) rows = [{peer:room.peer,preview:'Новая переписка'}, ...rows];
-      const html = item(null, 'Все участники курса') + '<h3>Личные сообщения</h3>' + (rows.length ? rows.map(t => item(t.peer,t.preview,t.sent_at)).join('') : `<div class="chat-note"><span class="chat-note-icon" aria-hidden="true">${icon('chat')}</span><p>Введите @юзернейм в поиске, чтобы начать переписку.</p></div>`);
+      if (room.peer && !isGroup(room.peer) && !rows.some(t => t.peer === room.peer)) rows = [{peer:room.peer,preview:'Новая переписка'}, ...rows];
+      const html = item(null, 'Все участники курса') + `<div class="chat-group-label"><h3>Группы</h3><button type="button" data-new-group aria-label="Создать группу" title="Создать группу">${icon('plus')} Создать</button></div>` + groups.map(g=>item(g.key,g.preview||rolesLabel(g.role))).join('') + '<h3>Личные сообщения</h3>' + (rows.length ? rows.map(t => item(t.peer,t.preview,t.sent_at)).join('') : `<div class="chat-note"><span class="chat-note-icon" aria-hidden="true">${icon('chat')}</span><p>Введите @юзернейм в поиске, чтобы начать переписку.</p></div>`);
       if (lastList !== html) {
         $('.chat-rooms').innerHTML = html;
         lastList = html;
@@ -198,12 +251,14 @@ window.Chats = (() => {
       }
       const state = {peer, posts:[], loaded:false, older:false, pending:false, syncing:false};
       room = state;
-      const name = peer ? '@' + peer : 'Общий чат';
+      const group=isGroup(peer);
+      const name = group ? groupFor(peer)?.title || 'Группа' : peer ? '@' + peer : 'Общий чат';
       root.dataset.pane = 'thread';
       $('.chat-thread').innerHTML = `<header class="chat-threadhead"><button class="chat-back" type="button" aria-label="К списку переписок">${icon('back')}</button>
-        ${avatar(peer)}<div><h2>${esc(name)}</h2><small>${peer ? 'Личная переписка' : '3 курс · Лингвистика'}</small></div></header>
+        ${avatar(peer)}<div><h2>${esc(name)}</h2><small>${group ? 'Групповой чат' : peer ? 'Личная переписка' : '3 курс · Лингвистика'}</small></div>${group?`<button class="group-info" type="button" aria-label="Участники и настройки группы">${icon('users')}<span>Участники</span></button>`:''}</header>
         <div class="chat-log" tabindex="0" aria-label="История сообщений"><button type="button" class="chat-older chat-link" hidden>Предыдущие сообщения</button><div class="chat-posts"></div></div>
-        <form class="chat-compose"><p class="chat-feedback" role="status"></p><div class="chat-inputrow"><textarea rows="1" maxlength="2000" aria-label="Сообщение" placeholder="${peer ? 'Сообщение для @' + esc(peer) : 'Сообщение в общий чат'}"></textarea><button type="submit" aria-label="Отправить сообщение" title="Отправить сообщение">${icon('arrow')}</button></div></form>`;
+        <form class="chat-compose"><p class="chat-feedback" role="status"></p><div class="chat-inputrow"><textarea rows="1" maxlength="2000" aria-label="Сообщение" placeholder="${group ? 'Сообщение в группу' : peer ? 'Сообщение для @' + esc(peer) : 'Сообщение в общий чат'}"></textarea><button type="submit" aria-label="Отправить сообщение" title="Отправить сообщение">${icon('arrow')}</button></div></form>`;
+      if(group)$('.group-info').onclick=()=>{const g=groupFor(peer);if(g)controls.people(g);};
       const form = $('.chat-compose'), field = $('textarea');
       form.addEventListener('pointerdown', e => {
         if (e.target.closest('button') && document.activeElement === field) e.preventDefault();
@@ -211,7 +266,7 @@ window.Chats = (() => {
       field.value = drafts.get(peer)?.text || '';
       const button = form.querySelector('button');
       const update = () => {
-        button.disabled = !field.value.trim() || state.pending;
+        button.disabled = !field.value.trim() || state.pending || !!state.muted;
         field.style.height = 'auto';
         if (field.value) field.style.height = Math.min(field.scrollHeight, 120) + 'px';
       };
@@ -223,7 +278,7 @@ window.Chats = (() => {
       form.onsubmit = async e => {
         e.preventDefault();
         const draft = drafts.get(peer);
-        if (!draft?.text.trim() || state.pending) return;
+        if (!draft?.text.trim() || state.pending || state.muted) return;
         state.pending = true; update();
         try {
           await DB.rpc('chat_send', {p_peer:peer,p_body:draft.text,p_nonce:draft.nonce});
@@ -253,10 +308,10 @@ window.Chats = (() => {
         const divider = day !== date ? `<div class="chat-day">${esc(date)}</div>` : '';
         day = date;
         const mine = p.sender === me;
-        const author = !state.peer && !mine ? `<button type="button" data-author="${esc(p.sender)}">@${esc(p.sender)}</button>` : '';
-        return `${divider}<article class="chat-post ${mine ? 'mine' : ''}">${author}<p>${esc(p.body)}</p><time datetime="${esc(p.sent_at)}">${clock.format(time)}</time></article>`;
+        const author = (!state.peer || isGroup(state.peer)) && !mine ? `<button type="button" data-author="${esc(p.sender)}">@${esc(p.sender)}</button>` : '';
+        return `${divider}<article class="chat-post ${mine ? 'mine' : ''}"><div class="post-sender">${avatar(p.sender)}${author || `<small>${mine?'Вы':'@'+esc(p.sender)}</small>`}</div><p>${esc(p.body)}</p><time datetime="${esc(p.sent_at)}">${clock.format(time)}</time></article>`;
       }).join('');
-      $('.chat-posts').innerHTML = html || `<div class="chat-empty"><div class="chat-art" aria-hidden="true"><span class="chat-art-back"></span><span class="chat-art-front"><i></i><i></i><i></i></span></div><h3>${state.peer ? 'Начните переписку' : 'Начните обсуждение'}</h3><p>${state.peer ? 'Отправьте первое сообщение @' + esc(state.peer) + '.' : 'Задайте вопрос или поделитесь новостью с курсом.'}</p></div>`;
+      $('.chat-posts').innerHTML = html || `<div class="chat-empty"><div class="chat-art" aria-hidden="true"><span class="chat-art-back"></span><span class="chat-art-front"><i></i><i></i><i></i></span></div><h3>${state.peer ? 'Начните переписку' : 'Начните обсуждение'}</h3><p>${isGroup(state.peer) ? 'Отправьте первое сообщение участникам группы.' : state.peer ? 'Отправьте первое сообщение @' + esc(state.peer) + '.' : 'Задайте вопрос или поделитесь новостью с курсом.'}</p></div>`;
       $('.chat-older').hidden = !state.older;
     }
 
@@ -290,15 +345,24 @@ window.Chats = (() => {
       if (state.syncing || !active || room !== state) return;
       state.syncing = true;
       try {
-        const [rows, nextThreads] = await Promise.all([
+        const [rows, nextThreads, nextGroups] = await Promise.all([
           DB.rpc('chat_feed',{p_peer:state.peer,p_after:state.loaded ? state.posts.at(-1)?.id || 0 : null}),
-          DB.rpc('chat_threads')
+          DB.rpc('chat_threads'), DB.rpc('chat_groups_list')
         ]);
         if (!active || room !== state) return;
         receive(state,rows,!state.loaded);
-        threads = nextThreads; list(); $('.chat-feedback').textContent = '';
+        threads = nextThreads; groups=nextGroups; list();
+        const g=groupFor(state.peer);
+        if(g) $('.chat-threadhead h2').textContent=g.title;
+        state.muted=g?.muted_until && new Date(g.muted_until)>new Date();
+        $('.chat-compose button').disabled=!!state.muted || state.pending || !$('textarea').value.trim();
+        $('.chat-feedback').textContent=state.muted?'Запрет писать до '+new Date(g.muted_until).toLocaleString('ru'):'';
+        await fetchAvatars(state);
       } catch (e) {
-        if (active && state === room) $('.chat-feedback').textContent = explain(e);
+        if (!active || state!==room) return;
+        if(e.message==='group_unavailable') {removeGroup(state.peer);return;}
+        if(e.message==='chat_banned' || e.message==='access_denied') {open(main);return;}
+        $('.chat-feedback').textContent = explain(e);
       } finally { state.syncing = false; }
     }
 

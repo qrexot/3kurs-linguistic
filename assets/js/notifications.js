@@ -30,7 +30,7 @@
     if (!bell.isConnected) host.prepend(bell);
   }
   function position() {
-    if (!dialog?.open || !bell) return;
+    if (!dialog || !bell) return;
     const rect = bell.getBoundingClientRect();
     dialog.style.setProperty('--notifications-top', `${Math.min(rect.bottom + 12, Math.max(16, innerHeight - 380))}px`);
     dialog.style.setProperty('--notifications-right', `${Math.max(16, Math.min(innerWidth - rect.right, innerWidth - 456))}px`);
@@ -57,7 +57,7 @@
     dialog.addEventListener('pointerdown', event => { outside = event.target === dialog && isOutside(event); });
     dialog.addEventListener('click', event => { if (outside && event.target === dialog && isOutside(event)) dialog.close(); outside = false; });
     dialog.addEventListener('close', () => {
-      document.documentElement.classList.remove('notifications-open');
+      document.documentElement.classList.remove('notifications-open', 'notifications-gutter');
       bell?.setAttribute('aria-expanded', 'false');
       bell?.focus({ preventScroll:true });
     });
@@ -68,10 +68,13 @@
     if (dialog.open) return;
     filter = 'all'; failed = false;
     dialog.querySelector('.notifications-feedback').hidden = true;
+    position();
+    const page = document.documentElement;
+    page.classList.toggle('notifications-gutter', innerWidth > page.clientWidth);
+    page.classList.add('notifications-open');
     dialog.showModal();
-    document.documentElement.classList.add('notifications-open');
     bell.setAttribute('aria-expanded', 'true');
-    position(); render(); refresh();
+    render(); refresh();
   }
   function emptyState(name, title, description, retry = false) {
     return `<div class="notifications-empty"><span class="notifications-empty-icon">${icon(name)}</span><h3>${title}</h3><p>${description}</p>${retry ? '<button type="button" class="notifications-retry">Попробовать снова</button>' : ''}</div>`;

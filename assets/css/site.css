@@ -357,8 +357,8 @@ footer a:hover{color:var(--accent)}
 }
 
 /* Claude Modal Dialog */
-html:has(dialog[open]),
-body:has(dialog[open]),
+html:has(dialog[open]:not(.notifications-dialog)),
+body:has(dialog[open]:not(.notifications-dialog)),
 html.modal-open,
 body.modal-open{
   overflow:hidden !important;

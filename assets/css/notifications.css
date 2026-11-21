@@ -4,8 +4,9 @@
 .notifications-bell[aria-expanded=true]{background:var(--accent-soft);border-color:var(--accent-border);color:var(--accent-hover,#e28a6c)}
 .notifications-count{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px;border:2px solid var(--paper,#191919);border-radius:10px;background:var(--accent,#d97757);color:#fff;font:600 10px/1 var(--font-ui,Arial,sans-serif);font-variant-numeric:tabular-nums}
 html.notifications-open{overflow:hidden}
+html.notifications-gutter{scrollbar-gutter:stable}
 .notifications-dialog{position:fixed;inset:var(--notifications-top,76px) var(--notifications-right,24px) auto auto;width:min(440px,calc(100% - 32px));max-width:none;max-height:calc(100vh - var(--notifications-top,76px) - 24px);max-height:min(680px,calc(100dvh - var(--notifications-top,76px) - 24px));margin:0;padding:0;overflow:hidden;border:1px solid var(--line-elevated,#424242);border-radius:18px;background:#222;color:var(--ink,#ececec);box-shadow:0 24px 72px #0007,0 4px 16px #0004;font-family:var(--font-ui,Inter,Arial,sans-serif);isolation:isolate}
-.notifications-dialog[open]{display:flex;flex-direction:column;animation:notifications-enter .18s ease-out}
+.notifications-dialog[open]{display:flex;flex-direction:column}
 .notifications-dialog::backdrop{background:rgba(0,0,0,.38)}
 .notifications-header{display:flex;align-items:center;gap:12px;flex:none;padding:22px 20px 20px}
 .notifications-emblem{display:grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid var(--line,#383838);border-radius:12px;background:var(--surface-2,#252525);color:var(--accent-hover,#e28a6c)}

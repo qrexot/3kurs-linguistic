@@ -887,3 +887,8 @@ body:has(.visitor-dialog[open]) {
     padding: 18px;
   }
 }
+
+.chat-admin-form { display:grid; gap:12px; max-width:520px; padding:15px; }
+.chat-admin-form label { display:grid; gap:5px; font-size:13px; }
+.chat-admin-form :is(select,input) { width:100%; min-height:44px; background:#222; color:#eee; border:1px solid #48443e; border-radius:8px; padding:8px 12px; }
+.chat-admin-form [hidden] { display:none; }
