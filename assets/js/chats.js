@@ -112,60 +112,30 @@ window.Chats = (() => {
       root.remove();
     };
 
-    function onboarding(restore = false, handle = '') {
-      const secret = crypto.randomUUID().replaceAll('-', '');
+    function accountForm(step) {
+      const login = step === 'login', restore = step === 'restore';
       root.dataset.screen = 'account';
-      root.innerHTML = `<div class="chat-welcome">
-        <header class="chat-intro"><span class="chat-emblem">${icon('chat')}</span><h1>${restore ? 'Вернуться в чаты' : 'Профиль для чатов'}</h1>
-        <p>${restore ? 'Введите данные своего профиля, чтобы открыть переписки.' : 'Выберите имя для общего чата и личных сообщений.'}</p></header>
-        <form class="chat-signup">
-          <div class="chat-field"><label for="chat-handle">Юзернейм</label>
-            <div class="chat-control"><span aria-hidden="true">@</span><input id="chat-handle" name="handle" required minlength="3" maxlength="20" pattern="[A-Za-z][A-Za-z0-9_]{2,19}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ваше имя латиницей" value="${esc(handle)}" aria-describedby="chat-name-help"></div>
-            <p class="chat-hint" id="chat-name-help">${restore ? 'Тот же юзернейм, что и при регистрации.' : 'От 3 до 20 символов: латинские буквы, цифры и _. Имя выбирается один раз.'}</p>
-          </div>
-          ${restore ? `<div class="chat-field"><label for="chat-key">Код восстановления</label><div class="chat-control"><input id="chat-key" type="password" name="secret" required autocomplete="off" spellcheck="false" placeholder="Вставьте сохранённый код"></div></div>` :
-          `<div class="chat-keybox"><div class="chat-key-title">${icon('lock')}<label for="chat-key">Код восстановления</label></div>
-          <p class="chat-hint">Сохраните для входа с другого устройства.</p>
-          <div class="chat-keyrow"><input id="chat-key" name="secret" type="password" readonly value="${secret}" autocomplete="off">
-            <button type="button" class="chat-tool" data-reveal aria-label="Показать код" title="Показать код" aria-pressed="false">Показать</button>
-            <button type="button" class="chat-copy" data-copy>Копировать</button></div>
-          <span class="chat-hint" role="status" data-copy-status></span>
-          <label class="chat-check"><input type="checkbox" required> Я сохранил код</label></div>`}
-          <p class="chat-error" role="alert"></p><button class="chat-primary" type="submit">${restore ? 'Восстановить доступ' : 'Создать профиль'} ${icon('arrow')}</button>
-          <button type="button" class="chat-link" data-switch>${restore ? 'Создать новый профиль' : 'У меня уже есть профиль'}</button>
-        </form></div>`;
-      const form = $('form');
-      $('[data-switch]').onclick = () => onboarding(!restore, form.elements.handle.value);
-      if (!restore) {
-        const field = form.elements.secret, reveal = $('[data-reveal]');
-        function show(showCode) {
-          field.type = showCode ? 'text' : 'password';
-          reveal.textContent = showCode ? 'Скрыть' : 'Показать';
-          reveal.setAttribute('aria-pressed',String(showCode));
-          reveal.setAttribute('aria-label',reveal.title = reveal.textContent + ' код');
-        }
-        reveal.onclick = () => show(field.type === 'password');
-        $('[data-copy]').onclick = async () => {
-          const status = $('[data-copy-status]');
-          try {
-            await navigator.clipboard.writeText(field.value);
-            status.textContent = 'Код скопирован';
-          } catch {
-            show(true); field.focus(); field.select();
-            status.textContent = 'Код выделен. Скопируйте его вручную.';
-          }
-        };
-      }
-      form.onsubmit = async event => {
-        event.preventDefault();
-        const button = form.querySelector('[type=submit]');
-        button.disabled = true;
-        form.querySelector('[data-switch]').disabled = true;
+      const heading = login ? 'Войти в аккаунт сайта' : restore ? 'Привязать прежний ник' : 'Выбрать ник';
+      root.innerHTML = `<div class="chat-welcome"><header class="chat-intro"><h1>${heading}</h1><p>${login ? 'Используйте логин и пароль, выданные администратором сайта.' : 'Этот ник будет доступен на всех устройствах вашего аккаунта.'}</p></header>
+        <form class="chat-signup"><label>${login ? 'Логин сайта' : 'Ник в чатах'}<div class="chat-control"><input name="identity" required maxlength="${login?16:20}" autocomplete="username" autocapitalize="none" spellcheck="false"></div></label>
+        ${login || restore ? `<label>${login?'Пароль':'Прежний код восстановления'}<div class="chat-control"><input name="secret" type="password" required autocomplete="${login?'current-password':'off'}"></div></label>` : ''}
+        <p class="chat-error" role="alert"></p><button class="chat-primary">${login?'Войти':'Сохранить ник'}</button>
+        ${login?'':`<button type="button" data-switch class="chat-link">${restore?'Выбрать новый ник':'У меня уже есть ник'}</button>`}</form></div>`;
+      const form=$('form');
+      if (!login) $('[data-switch]').onclick=()=>accountForm(restore?'handle':'restore');
+      form.onsubmit=async e=>{
+        e.preventDefault(); const btn=form.querySelector('.chat-primary');btn.disabled=true;
         try {
-          me = await DB.rpc('chat_join', {p_handle:form.elements.handle.value.trim(), p_code:form.elements.secret.value.trim().toLowerCase(), p_restore:restore});
-          if (active) workspace();
-        } catch (e) { form.querySelector('[role=alert]').textContent = explain(e); }
-        finally { button.disabled = false; form.querySelector('[data-switch]').disabled = false; }
+          const name=form.elements.identity.value.trim(), secret=form.elements.secret?.value || '';
+          if(login){
+            const result=await DB.rpc('reader_login',{p_login:name,p_password:secret});
+            if(!result?.ok)throw new Error(({capacity:'Достигнут лимит устройств.',rate_limit:'Слишком много попыток. Попробуйте позже.',browser_in_use:'Этот браузер уже привязан к другому аккаунту.'})[result?.code] || 'Не удалось войти. Проверьте логин, пароль и доступ аккаунта.');
+            if(active)await open(main);
+          } else {
+            me=await DB.rpc('chat_join',{p_handle:name,p_code:secret.trim().toLowerCase(),p_restore:restore});
+            if(active)workspace();
+          }
+        }catch(err){form.querySelector('[role=alert]').textContent=explain(err);}finally{btn.disabled=false;}
       };
     }
 
@@ -368,7 +338,8 @@ window.Chats = (() => {
 
     try {
       me = await DB.rpc('chat_handle');
-      if (active) { if (me) workspace(); else onboarding(); }
+      const signedIn = me || await DB.rpc('site_account_signed_in');
+      if (active) { if (me) workspace(); else accountForm(signedIn?'handle':'login'); }
     } catch (e) {
       if (!active) return;
       root.innerHTML = `<h1>Чаты</h1><p role="alert">${esc(explain(e))}</p><button class="btn">Попробовать снова</button>`;
