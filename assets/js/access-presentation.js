@@ -2,10 +2,10 @@
 /* Shared visitor/admin wording. Authorization remains on the server. */
 window.AccessPresentation=Object.freeze({
  closedTitle:'Общий доступ отключён',
- openTitle:'Общий доступ открыт',
+ openTitle:'Вход по аккаунту',
  heading:'Пока здесь тихо :(',
  lead:'Я отключил общий доступ к сайту.',
- copy:'Конспекты и информация о лекциях сохранились. Ты можешь написать мне в Telegram, а при наличии специального доступа — войти на сайт.',
+ copy:'Конспекты и информация о лекциях сохранились. Ты можешь написать мне в Telegram.',
  defaultMessage:'Общий доступ к сайту отключён. При наличии специального доступа можно войти в материалы.',
  customMessage(value){
   const text=String(value||'').trim();
